@@ -10,8 +10,8 @@ CXX := $(CROSS_COMPILE)g++
 CXXFLAGS := -Os
 #endif
 
-# platform dependant stuff
-ifeq ($(PLATFORM),tg5040)
+# platform dependant stuff - tg5040 and tg5050
+ifneq (,$(findstring tg50,$(PLATFORM)))
 SDCARD_ROOT := /mnt/SDCARD
 NEXTUI_SYSTEM_PATH := $(SDCARD_ROOT)/.system
 
@@ -20,7 +20,7 @@ CXXFLAGS += -DPATH_DEFAULT_RIGHT=\"$(SDCARD_ROOT)\"
 CXXFLAGS += -DFILE_SYSTEM=\"/dev/mmcblk1p1\"
 
 # Keys
-# Joys for Trimui Brick/Smart Pro
+# Joys for Trimui Brick/Smart Pro/Smart Pro S
 CXXFLAGS += -DCMDR_KEY_UP=SDLK_UP
 CXXFLAGS += -DCMDR_KEY_RIGHT=SDLK_RIGHT
 CXXFLAGS += -DCMDR_KEY_DOWN=SDLK_DOWN
@@ -42,7 +42,7 @@ CXXFLAGS += -DAUTOSCALE_DPI=1
 #CXXFLAGS += -DSCREEN_WIDTH=1024 #640
 #CXXFLAGS += -DSCREEN_HEIGHT=768 #480
 # Brick: 1024x768 @3in, 400ppi -> 400/72 = 5.55555 PPU -> we use 4 (font size 32)
-# TSP: 1280x720 @5in, 296ppi -> 296/72 = 4.11111 PPU -> we use 3 (font size 24)
+# TSP(s): 1280x720 @5in, 296ppi -> 296/72 = 4.11111 PPU -> we use 3 (font size 24)
 CXXFLAGS += -DPPU_X=3
 CXXFLAGS += -DPPU_Y=3
 CXXFLAGS += -DSCREEN_BPP=32
@@ -50,6 +50,9 @@ endif
 
 SDL := SDL2
 CXXFLAGS += -I$(PREFIX)/include/$(SDL) -DUSE_$(SDL)
+
+CXXFLAGS += $$(pkg-config --cflags sdl2 SDL2_image SDL2_ttf) -DUSE_$(SDL)
+LINKFLAGS += $$(pkg-config --libs sdl2 SDL2_image SDL2_ttf)
 
 # Font
 CXXFLAGS += -DFONTS='{"$(NEXTUI_SYSTEM_PATH)/res/font1.ttf",8},{"SourceCodePro-Semibold.ttf",8},{"SourceCodePro-Regular.ttf",8}'
