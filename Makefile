@@ -2,8 +2,6 @@ ifeq (,$(PLATFORM))
 PLATFORM=$(UNION_PLATFORM)
 endif
 
-CXX := $(CROSS_COMPILE)g++
-
 #ifeq ($(PLATFORM),miyoomini)
 #CXXFLAGS := -Os -marm -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -march=armv7ve+simd
 #else
@@ -46,12 +44,48 @@ CXXFLAGS += -DAUTOSCALE_DPI=1
 CXXFLAGS += -DPPU_X=3
 CXXFLAGS += -DPPU_Y=3
 CXXFLAGS += -DSCREEN_BPP=32
+
+# platform dependant stuff - my355
+else ifneq (,$(findstring my355,$(PLATFORM)))
+SDCARD_ROOT := /mnt/SDCARD
+NEXTUI_SYSTEM_PATH := $(SDCARD_ROOT)/.system
+
+CXXFLAGS += -DPATH_DEFAULT=\"$(SDCARD_ROOT)\"
+CXXFLAGS += -DPATH_DEFAULT_RIGHT=\"$(SDCARD_ROOT)\"
+CXXFLAGS += -DFILE_SYSTEM=\"/dev/mmcblk1p1\"
+
+# Keys
+# Joys for Trimui Brick/Smart Pro/Smart Pro S
+CXXFLAGS += -DCMDR_KEY_UP=SDLK_UP
+CXXFLAGS += -DCMDR_KEY_RIGHT=SDLK_RIGHT
+CXXFLAGS += -DCMDR_KEY_DOWN=SDLK_DOWN
+CXXFLAGS += -DCMDR_KEY_LEFT=SDLK_LEFT
+CXXFLAGS += -DCMDR_KEY_OPEN=1		# A
+CXXFLAGS += -DCMDR_KEY_PARENT=0		# B
+CXXFLAGS += -DCMDR_KEY_OPERATION=3	# X
+CXXFLAGS += -DCMDR_KEY_SYSTEM=2		# Y
+CXXFLAGS += -DCMDR_KEY_PAGEUP=4		# L1 / L2 = SDLK_TAB
+CXXFLAGS += -DCMDR_KEY_PAGEDOWN=5	# R1 / R2 = SDLK_BACKSPACE
+CXXFLAGS += -DCMDR_KEY_SELECT=6		# 8		# SELECT
+CXXFLAGS += -DCMDR_KEY_TRANSFER=7	# 9	# START
+CXXFLAGS += -DCMDR_KEY_MENU=8		# 19		# MENU (added)
+
+# Screen
+CXXFLAGS += -DAUTOSCALE=1
+CXXFLAGS += -DAUTOSCALE_DPI=1
+
+#CXXFLAGS += -DSCREEN_WIDTH=1024 #640
+#CXXFLAGS += -DSCREEN_HEIGHT=768 #480
+# Miyoo Flip: 640x480 @3.5in, 229ppi -> 229/72 = 3.1805 PPU -> we use 3 (font size 24)
+CXXFLAGS += -DPPU_X=3
+CXXFLAGS += -DPPU_Y=3
+CXXFLAGS += -DSCREEN_BPP=32
 endif
 
 SDL := SDL2
-CXXFLAGS += -I$(PREFIX)/include/$(SDL) -DUSE_$(SDL)
+CXXFLAGS += -DUSE_$(SDL) -lm -ldl
 
-CXXFLAGS += $$(pkg-config --cflags sdl2 SDL2_image SDL2_ttf) -DUSE_$(SDL)
+CXXFLAGS += $$(pkg-config --cflags sdl2 SDL2_image SDL2_ttf)
 LINKFLAGS += $$(pkg-config --libs sdl2 SDL2_image SDL2_ttf)
 
 # Font
@@ -64,8 +98,6 @@ RESDIR := res
 CXXFLAGS += -DRESDIR="\"$(RESDIR)\""
 
 LINKFLAGS += -s
-LINKFLAGS += -l$(SDL) -l$(SDL)_image -l$(SDL)_ttf
-#LINKFLAGS += $(shell $(SDL_CONFIG) --libs) -lSDL_image -lSDL_ttf
 ifeq ($(PLATFORM),miyoomini)
 LINKFLAGS += -lmi_sys -lmi_gfx
 endif
@@ -92,7 +124,8 @@ all: $(EXECUTABLE)
 
 $(EXECUTABLE): $(addprefix $(OUTDIR)/,$(OBJS))
 	$(SUM) "  LINK    $@"
-	$(CMD)$(CXX) $(LINKFLAGS) -o $@ $^
+	$(SUM) "  LINK    $(LINKFLAGS)"
+	$(CMD)$(LD) $(LINKFLAGS) -o $@ $^
 
 $(OUTDIR)/%.o: src/%.cpp
 	@mkdir -p $(@D)
