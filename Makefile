@@ -83,10 +83,10 @@ CXXFLAGS += -DSCREEN_BPP=32
 endif
 
 SDL := SDL2
-CXXFLAGS += -DUSE_$(SDL) -lm -ldl
+CXXFLAGS += -I$(PREFIX)/include/$(SDL) -DUSE_$(SDL)
 
-CXXFLAGS += $$(pkg-config --cflags sdl2 SDL2_image SDL2_ttf)
-LINKFLAGS += $$(pkg-config --libs sdl2 SDL2_image SDL2_ttf)
+#CXXFLAGS += $$(pkg-config --cflags sdl2 SDL2_image SDL2_ttf)
+#LINKFLAGS += $$(pkg-config --libs sdl2 SDL2_image SDL2_ttf)
 
 # Font
 CXXFLAGS += -DFONTS='{"$(NEXTUI_SYSTEM_PATH)/res/font1.ttf",8},{"SourceCodePro-Semibold.ttf",8},{"SourceCodePro-Regular.ttf",8}'
@@ -98,6 +98,7 @@ RESDIR := res
 CXXFLAGS += -DRESDIR="\"$(RESDIR)\""
 
 LINKFLAGS += -s
+LINKFLAGS += -l$(SDL) -l$(SDL)_image -l$(SDL)_ttf
 ifeq ($(PLATFORM),miyoomini)
 LINKFLAGS += -lmi_sys -lmi_gfx
 endif
@@ -125,7 +126,7 @@ all: $(EXECUTABLE)
 $(EXECUTABLE): $(addprefix $(OUTDIR)/,$(OBJS))
 	$(SUM) "  LINK    $@"
 	$(SUM) "  LINK    $(LINKFLAGS)"
-	$(CMD)$(LD) $(LINKFLAGS) -o $@ $^
+	$(CMD)$(CXX) $(LINKFLAGS) -o $@ $^
 
 $(OUTDIR)/%.o: src/%.cpp
 	@mkdir -p $(@D)
