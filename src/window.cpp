@@ -91,6 +91,7 @@ int CWindow::execute()
                     }
                     if (m_retVal) l_loop = false;
                     break;
+#ifndef IGNORE_KEYDOWN
                 case SDL_KEYDOWN: {
                     //printf("key:%d\n",event.button.button); fflush(stdout);
                     SDL_utils::setMouseCursorEnabled(false);
@@ -102,6 +103,7 @@ int CWindow::execute()
                     if (m_retVal) l_loop = false;
                     break;
                 }
+#endif
                 case SDL_JOYBUTTONDOWN: {
                     //printf("joy:%d\n",event.jbutton.button); fflush(stdout);
                     SDL_utils::setMouseCursorEnabled(false);
