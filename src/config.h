@@ -43,7 +43,7 @@ struct Config {
     SDLC_Keycode key_system = CMDR_KEY_SYSTEM;
     SDLC_Keycode key_transfer = CMDR_KEY_TRANSFER;
     SDLC_Keycode key_up = CMDR_KEY_UP;
-    SDLC_Keycode key_menu = CMDR_KEY_MENU;	// added for TRIMUI
+    SDLC_Keycode key_menu = CMDR_KEY_MENU;
 
     // On-screen keyboard settings.
 #ifdef OSK_KEY_SYSTEM_IS_BACKSPACE

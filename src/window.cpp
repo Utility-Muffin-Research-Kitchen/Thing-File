@@ -7,6 +7,7 @@
 #include "resourceManager.h"
 #include "screen.h"
 #include "sdlutils.h"
+#include "umrk_input.h"
 
 #define KEYHOLD_TIMER_FIRST   12
 #define KEYHOLD_TIMER         3
@@ -91,42 +92,30 @@ int CWindow::execute()
                     }
                     if (m_retVal) l_loop = false;
                     break;
-#ifndef IGNORE_KEYDOWN
-                case SDL_KEYDOWN: {
-                    //printf("key:%d\n",event.button.button); fflush(stdout);
+                case SDL_KEYDOWN:
+                case SDL_KEYUP:
+                case SDL_JOYBUTTONDOWN:
+                case SDL_JOYBUTTONUP:
+                case SDL_JOYHATMOTION:
+                case SDL_JOYAXISMOTION:
+#ifdef USE_SDL2
+                case SDL_CONTROLLERBUTTONDOWN:
+                case SDL_CONTROLLERBUTTONUP:
+                case SDL_CONTROLLERAXISMOTION:
+#endif
+                {
                     SDL_utils::setMouseCursorEnabled(false);
                     if (handleZoomTrigger(event)) {
                         l_render = true;
                         break;
                     }
-                    l_render = this->keyPress(event) || l_render;
-                    if (m_retVal) l_loop = false;
-                    break;
-                }
-#endif
-                case SDL_JOYBUTTONDOWN: {
-                    //printf("joy:%d\n",event.jbutton.button); fflush(stdout);
-                    SDL_utils::setMouseCursorEnabled(false);
-                    SDL_Event key_event;
-                    key_event.key.keysym.sym = event.jbutton.button == CMDR_KEY_MENU ? CMDR_KEY_SYSTEM : event.jbutton.button;
-                    l_render = this->keyPress(key_event) || l_render;
-                    if (m_retVal) l_loop = false;
-                    break;
-                }
-                case SDL_JOYHATMOTION: {
-                    //printf("hat:%d\n",event.jhat.value); fflush(stdout);
                     SDL_Event hat_event;
-                    hat_event.key.keysym.sym = 0;
-                    if (event.jhat.value==SDL_HAT_UP) hat_event.key.keysym.sym = CMDR_KEY_UP;
-                    if (event.jhat.value==SDL_HAT_DOWN) hat_event.key.keysym.sym = CMDR_KEY_DOWN;
-                    if (event.jhat.value==SDL_HAT_LEFT) hat_event.key.keysym.sym = CMDR_KEY_LEFT;
-                    if (event.jhat.value==SDL_HAT_RIGHT) hat_event.key.keysym.sym = CMDR_KEY_RIGHT;
-                    
-                    if (hat_event.key.keysym.sym) {
-                        l_render = this->keyPress(hat_event); // always returns false
-                        l_render = true;
-                        if (m_retVal)
-                        l_loop = false;
+                    if (UmrkInput::handleEvent(event, &hat_event)) {
+                        l_render = this->keyPress(hat_event) || true;
+                        if (m_retVal) l_loop = false;
+                    } else if (event.type == SDL_KEYDOWN) {
+                        l_render = this->keyPress(event) || l_render;
+                        if (m_retVal) l_loop = false;
                     }
                     break;
                 }
@@ -242,7 +231,7 @@ bool CWindow::tick(SDLKey keycode)
 #else
     const bool held = SDL_GetKeyState(NULL)[keycode];
 #endif
-    if (held)
+    if (held || UmrkInput::actionHeld(keycode))
     {
         if (m_timer)
         {

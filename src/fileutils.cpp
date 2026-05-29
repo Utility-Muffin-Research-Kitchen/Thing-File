@@ -7,6 +7,7 @@
 #include <functional>
 #include <iostream>
 #include <iterator>
+#include <limits.h>
 #include <memory>
 #include <sstream>
 
@@ -14,6 +15,11 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#include <vector>
+#endif
 
 #ifdef _POSIX_SPAWN
 #include <poll.h>
@@ -282,7 +288,19 @@ void ActionToDir(const std::vector<std::string> &inputs,
 // Returns absolute path to self (for re-launching on Execute failure).
 std::string getSelfExecutionPath()
 {
-    // Get execution path
+#ifdef __APPLE__
+    uint32_t size = 0;
+    char scratch = '\0';
+    _NSGetExecutablePath(&scratch, &size);
+    std::vector<char> buf(size + 1);
+    if (_NSGetExecutablePath(buf.data(), &size) != 0) {
+        perror("_NSGetExecutablePath");
+        return {};
+    }
+    char resolved[PATH_MAX];
+    if (realpath(buf.data(), resolved)) return resolved;
+    return buf.data();
+#else
     std::string result;
     char buf[1024];
     int len = readlink("/proc/self/exe", buf, sizeof(buf));
@@ -293,6 +311,12 @@ std::string getSelfExecutionPath()
     }
     result.append(buf, len);
     return result;
+#endif
+}
+
+ActionResult SyncPath()
+{
+    return Run("sync");
 }
 
 } // namespace
@@ -304,7 +328,7 @@ void File_utils::copyFile(
         [&](const std::string &src, const std::string & /*dest*/) {
             return Run("cp", "-f", "-r", src, dest_dir);
         });
-    Run("sync", dest_dir);
+    SyncPath();
 }
 
 void File_utils::moveFile(
@@ -314,7 +338,7 @@ void File_utils::moveFile(
         [&](const std::string &src, const std::string &dest) {
             return Run("mv", "-f", src, dest_dir);
         });
-    Run("sync", dest_dir);
+    SyncPath();
 }
 
 void File_utils::symlinkFile(
@@ -324,7 +348,7 @@ void File_utils::symlinkFile(
         [&](const std::string &src, const std::string &dest) {
             return Run("ln", "-sf", src, dest_dir);
         });
-    Run("sync", dest_dir);
+    SyncPath();
 }
 
 void File_utils::renameFile(
@@ -335,7 +359,7 @@ void File_utils::renameFile(
             == OverwriteDialogResult::YES)
     {
         auto result = Run("mv", "-f", p_file1, p_file2);
-        if (result.ok()) result = Run("sync", p_file2);
+        if (result.ok()) result = SyncPath();
         if (!result.ok())
         {
             ErrorDialog("Error renaming " + getFileName(p_file1) + " to "
@@ -365,7 +389,7 @@ void File_utils::removeFile(const std::vector<std::string> &p_files)
 void File_utils::makeDirectory(const std::string &p_file)
 {
     auto result = Run("mkdir", "-p", p_file);
-    if (result.ok()) result = Run("sync", p_file);
+    if (result.ok()) result = SyncPath();
     if (!result.ok()) ErrorDialog("Error creating " + p_file, result.message());
 }
 
@@ -413,11 +437,13 @@ void File_utils::executeFile(const std::string &p_file)
     std::string error_message = getFileName(p_file) + ": " + child_error;
 
     // Relaunch self and show the error
-    ::chdir(prev_pwd);
+    if (prev_pwd) ::chdir(prev_pwd);
     const std::string self_path = getSelfExecutionPath();
-    ::free(prev_pwd);
-    execl(self_path.c_str(), self_path.c_str(), "--show_exec_error",
-        error_message.c_str(), NULL);
+    if (prev_pwd) ::free(prev_pwd);
+    if (!self_path.empty()) {
+        execl(self_path.c_str(), self_path.c_str(), "--show_exec_error",
+            error_message.c_str(), NULL);
+    }
     perror("relaunch error");
     std::cerr << getSelfExecutionPath() << std::endl;
 }

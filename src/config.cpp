@@ -191,6 +191,7 @@ void Config::Load(const std::string &path)
     CFG_SDLK(key_system)
     CFG_SDLK(key_transfer)
     CFG_SDLK(key_up)
+    CFG_SDLK(key_menu)
 
     if (!m.empty()) {
         std::cerr << "  Unknown settings:\n";

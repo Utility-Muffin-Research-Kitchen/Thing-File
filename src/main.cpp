@@ -13,6 +13,7 @@
 #include "resourceManager.h"
 #include "screen.h"
 #include "sdlutils.h"
+#include "umrk_input.h"
 
 // Globals
 SDL_Joystick *Globals::g_joy=NULL;
@@ -30,9 +31,9 @@ bool fileExists(const std::string &path)
 }
 
 constexpr char kUsage[] =
-    R"(commander [--config <path>] [--config-prelude <path>] [--res-dir <path>]
+    R"(thing-file [--config <path>] [--config-prelude <path>] [--res-dir <path>]
 
-    --config <path>             Config file path. Default: ~/.config/commander.cfg.
+    --config <path>             Config file path. Default: ~/.config/thing-file.cfg.
     --config-prelude <path>     If provided, this config is loaded before the main config.
     --res-dir <path>            Resource directory. Overrides the configured one.
 )";
@@ -80,7 +81,7 @@ int main(int argc, char *argv[])
     auto &cfg = config();
     if (config_path.empty()) {
         std::string home_cfg_path
-            = std::getenv("HOME") + std::string("/.config/commander.cfg");
+            = std::getenv("HOME") + std::string("/.config/thing-file.cfg");
         if (fileExists(home_cfg_path)) config_path = std::move(home_cfg_path);
     }
     if (!config_prelude_path.empty()) cfg.Load(config_prelude_path);
@@ -94,7 +95,7 @@ int main(int argc, char *argv[])
     putenv(l_s);
 
     // Init SDL
-    SDL_Init(SDL_INIT_VIDEO |  SDL_INIT_JOYSTICK);
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
     if (IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG | IMG_INIT_TIF | IMG_INIT_WEBP) == 0) {
         std::cerr << "IMG_Init failed" << std::endl;
     } else {
@@ -118,6 +119,7 @@ int main(int argc, char *argv[])
         }
         
     }
+    UmrkInput::init();
 
     // Hide cursor before creating the output surface.
     SDL_ShowCursor(SDL_DISABLE);
@@ -157,6 +159,7 @@ int main(int argc, char *argv[])
     if ( Globals::g_joy!=NULL && SDL_JoystickGetAttached(Globals::g_joy)) {
         SDL_JoystickClose(Globals::g_joy);
     }
+    UmrkInput::shutdown();
 
     //Quit
     SDL_utils::hastalavista();

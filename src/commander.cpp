@@ -103,6 +103,10 @@ const bool CCommander::keyPress(const SDL_Event &p_event)
     CWindow::keyPress(p_event);
     const auto sym = p_event.key.keysym.sym;
     const auto &c = config();
+    if (sym == SDLK_q) {
+        m_retVal = -1;
+        return true;
+    }
     if ((sym == c.key_system)||(sym == c.key_menu)) {	// added MENU for TRIMUI
         if (openSystemMenu()) m_panelSource->refresh();
         return true;

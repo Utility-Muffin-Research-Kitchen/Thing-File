@@ -1,154 +1,141 @@
-ifeq (,$(PLATFORM))
-PLATFORM=$(UNION_PLATFORM)
-endif
+SHELL := /bin/bash
 
-#ifeq ($(PLATFORM),miyoomini)
-#CXXFLAGS := -Os -marm -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -march=armv7ve+simd
-#else
-CXXFLAGS := -Os
-#endif
+CXX ?= c++
+BUILD ?= build
+WORKSPACE_ROOT ?= $(abspath ..)
+MLP1_TOOLCHAIN_IMAGE ?= ghcr.io/utility-muffin-research-kitchen/mlp1-toolchain:local
+JAWAKA_SDCARD_ROOT ?= /Volumes/Storage/UMRK/Jawaka/mock-sdcard
 
-# platform dependant stuff - tg5040 and tg5050
-ifneq (,$(findstring tg50,$(PLATFORM)))
-SDCARD_ROOT := /mnt/SDCARD
-NEXTUI_SYSTEM_PATH := $(SDCARD_ROOT)/.system
+APP_NAME := Thing-File
+APP_BIN_NAME := thing-file
+PACKAGE_NAME := Thing-File.pak
+PACKAGE_ROOT := $(BUILD)/package
+PACKAGE_DIR := $(PACKAGE_ROOT)/$(PACKAGE_NAME)
+OUTDIR := $(BUILD)/obj
+EXECUTABLE := $(BUILD)/bin/$(APP_BIN_NAME)
 
-CXXFLAGS += -DPATH_DEFAULT=\"$(SDCARD_ROOT)\"
-CXXFLAGS += -DPATH_DEFAULT_RIGHT=\"$(SDCARD_ROOT)\"
-CXXFLAGS += -DFILE_SYSTEM=\"/dev/mmcblk1p1\"
-
-# Keys
-# Joys for Trimui Brick/Smart Pro/Smart Pro S
-CXXFLAGS += -DCMDR_KEY_UP=SDLK_UP
-CXXFLAGS += -DCMDR_KEY_RIGHT=SDLK_RIGHT
-CXXFLAGS += -DCMDR_KEY_DOWN=SDLK_DOWN
-CXXFLAGS += -DCMDR_KEY_LEFT=SDLK_LEFT
-CXXFLAGS += -DCMDR_KEY_OPEN=1		# A
-CXXFLAGS += -DCMDR_KEY_PARENT=0		# B
-CXXFLAGS += -DCMDR_KEY_OPERATION=3	# X
-CXXFLAGS += -DCMDR_KEY_SYSTEM=2		# Y
-CXXFLAGS += -DCMDR_KEY_PAGEUP=4		# L1 / L2 = SDLK_TAB
-CXXFLAGS += -DCMDR_KEY_PAGEDOWN=5	# R1 / R2 = SDLK_BACKSPACE
-CXXFLAGS += -DCMDR_KEY_SELECT=6		# 8		# SELECT
-CXXFLAGS += -DCMDR_KEY_TRANSFER=7	# 9	# START
-CXXFLAGS += -DCMDR_KEY_MENU=8		# 19		# MENU (added)
-
-# Screen
-CXXFLAGS += -DAUTOSCALE=1
-CXXFLAGS += -DAUTOSCALE_DPI=1
-
-#CXXFLAGS += -DSCREEN_WIDTH=1024 #640
-#CXXFLAGS += -DSCREEN_HEIGHT=768 #480
-# Brick: 1024x768 @3in, 400ppi -> 400/72 = 5.55555 PPU -> we use 4 (font size 32)
-# TSP(s): 1280x720 @5in, 296ppi -> 296/72 = 4.11111 PPU -> we use 3 (font size 24)
-CXXFLAGS += -DPPU_X=3
-CXXFLAGS += -DPPU_Y=3
-CXXFLAGS += -DSCREEN_BPP=32
-
-# platform dependant stuff - my355
-else ifneq (,$(findstring my355,$(PLATFORM)))
-SDCARD_ROOT := /mnt/SDCARD
-NEXTUI_SYSTEM_PATH := $(SDCARD_ROOT)/.system
-
-CXXFLAGS += -DPATH_DEFAULT=\"$(SDCARD_ROOT)\"
-CXXFLAGS += -DPATH_DEFAULT_RIGHT=\"$(SDCARD_ROOT)\"
-CXXFLAGS += -DFILE_SYSTEM=\"/dev/mmcblk1p1\"
-
-# Keys
-# Joys for Miyoo Flip
-CXXFLAGS += -DCMDR_KEY_UP=SDLK_UP
-CXXFLAGS += -DCMDR_KEY_RIGHT=SDLK_RIGHT
-CXXFLAGS += -DCMDR_KEY_DOWN=SDLK_DOWN
-CXXFLAGS += -DCMDR_KEY_LEFT=SDLK_LEFT
-CXXFLAGS += -DCMDR_KEY_OPEN=1		# A
-CXXFLAGS += -DCMDR_KEY_PARENT=0		# B
-CXXFLAGS += -DCMDR_KEY_OPERATION=3	# X
-CXXFLAGS += -DCMDR_KEY_SYSTEM=2		# Y
-CXXFLAGS += -DCMDR_KEY_PAGEUP=4		# L1 / L2 = SDLK_TAB
-CXXFLAGS += -DCMDR_KEY_PAGEDOWN=5	# R1 / R2 = SDLK_BACKSPACE
-CXXFLAGS += -DCMDR_KEY_SELECT=6		# 8		# SELECT
-CXXFLAGS += -DCMDR_KEY_TRANSFER=7	# 9	# START
-CXXFLAGS += -DCMDR_KEY_MENU=8		# 19		# MENU (added)
-CXXFLAGS += -DIGNORE_KEYDOWN=1      # miyoo inputd doubles up events
-
-# Screen
-CXXFLAGS += -DAUTOSCALE=1
-CXXFLAGS += -DAUTOSCALE_DPI=1
-
-#CXXFLAGS += -DSCREEN_WIDTH=1024 #640
-#CXXFLAGS += -DSCREEN_HEIGHT=768 #480
-# Miyoo Flip: 640x480 @3.5in, 229ppi -> 229/72 = 3.1805 PPU -> we use 3 (font size 24)
-CXXFLAGS += -DPPU_X=3
-CXXFLAGS += -DPPU_Y=3
-CXXFLAGS += -DSCREEN_BPP=32
-endif
+CXXSTD := -std=c++17
+CWARN := -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare
+CXXOPT ?= -Os
+CXXFLAGS_PLATFORM ?=
 
 SDL := SDL2
-CXXFLAGS += -I$(PREFIX)/include/$(SDL) -DUSE_$(SDL)
+SDL_CFLAGS := $(shell pkg-config --cflags sdl2 SDL2_image SDL2_ttf)
+SDL_LDFLAGS := $(shell pkg-config --libs sdl2 SDL2_image SDL2_ttf)
 
-#CXXFLAGS += $$(pkg-config --cflags sdl2 SDL2_image SDL2_ttf)
-#LINKFLAGS += $$(pkg-config --libs sdl2 SDL2_image SDL2_ttf)
-
-# Font
-CXXFLAGS += -DFONTS='{"$(NEXTUI_SYSTEM_PATH)/res/font1.ttf",8},{"SourceCodePro-Semibold.ttf",8},{"SourceCodePro-Regular.ttf",8}'
-ifeq ($(PLATFORM),miyoomini)
-CXXFLAGS += -DMIYOOMINI
+CXXFLAGS_COMMON := $(CXXSTD) $(CWARN) $(CXXOPT) $(CXXFLAGS_PLATFORM) $(SDL_CFLAGS) -DUSE_SDL2 -DAPP_NAME=\"$(APP_NAME)\" -DRES_DIR=\"res/\"
+LINKFLAGS_COMMON := $(SDL_LDFLAGS)
+ifeq ($(shell uname -s),Darwin)
+LINKFLAGS_COMMON += -framework CoreFoundation
 endif
 
-RESDIR := res
-CXXFLAGS += -DRESDIR="\"$(RESDIR)\""
+FONTS_NATIVE := {"/Volumes/Storage/UMRK/Catastrophe/res/font.ttf",8},{"SourceCodePro-Semibold.ttf",8},{"SourceCodePro-Regular.ttf",8}
+FONTS_MLP1 := {"/mnt/sdcard/Apps/Thing-File.pak/res/font.ttf",8},{"SourceCodePro-Semibold.ttf",8},{"SourceCodePro-Regular.ttf",8}
 
-LINKFLAGS += -s
-LINKFLAGS += -l$(SDL) -l$(SDL)_image -l$(SDL)_ttf
-ifeq ($(PLATFORM),miyoomini)
-LINKFLAGS += -lmi_sys -lmi_gfx
+ifeq ($(PLATFORM),mlp1)
+PLATFORM_ID := mlp1
+PATH_DEFAULT := /mnt/sdcard
+PATH_DEFAULT_RIGHT := /mnt/sdcard/UMRK
+FILE_SYSTEM := /dev/mmcblk1p1
+SCREEN_WIDTH := 480
+SCREEN_HEIGHT := 360
+PPU_X := 2
+PPU_Y := 2
+CXXFLAGS_COMMON += -DPLATFORM_MLP1 -DFONTS='$(FONTS_MLP1)'
+else
+PLATFORM_ID := mac
+PATH_DEFAULT := $(JAWAKA_SDCARD_ROOT)
+PATH_DEFAULT_RIGHT := $(JAWAKA_SDCARD_ROOT)/UMRK/mac
+FILE_SYSTEM := /
+SCREEN_WIDTH := 640
+SCREEN_HEIGHT := 480
+PPU_X := 1
+PPU_Y := 1
+CXXFLAGS_COMMON += -DFONTS='$(FONTS_NATIVE)'
 endif
 
-CMD := @
-SUM := @echo
+CXXFLAGS_COMMON += \
+	-DPATH_DEFAULT=\"$(PATH_DEFAULT)\" \
+	-DPATH_DEFAULT_RIGHT=\"$(PATH_DEFAULT_RIGHT)\" \
+	-DFILE_SYSTEM=\"$(FILE_SYSTEM)\" \
+	-DSCREEN_WIDTH=$(SCREEN_WIDTH) \
+	-DSCREEN_HEIGHT=$(SCREEN_HEIGHT) \
+	-DPPU_X=$(PPU_X) \
+	-DPPU_Y=$(PPU_Y) \
+	-DSCREEN_BPP=32 \
+	-DAUTOSCALE=1 \
+	-DAUTOSCALE_DPI=0
 
-OUTDIR := ./output
-
-EXECUTABLE := $(OUTDIR)/NextCommander
-
-OBJS :=	main.o commander.o config.o dialog.o fileLister.o fileutils.o keyboard.o panel.o resourceManager.o \
-	screen.o sdl_ttf_multifont.o sdlutils.o text_edit.o utf8.o text_viewer.o image_viewer.o  window.o \
-	sdl_gfx/$(SDL)_rotozoom.o
-ifeq ($(PLATFORM),miyoomini)
-OBJS += gfx.o
-endif
+OBJS := \
+	main.o commander.o config.o dialog.o fileLister.o fileutils.o keyboard.o panel.o resourceManager.o \
+	screen.o sdl_ttf_multifont.o sdlutils.o text_edit.o utf8.o text_viewer.o image_viewer.o window.o \
+	umrk_input.o \
+	sdl_gfx/SDL2_rotozoom.o
 
 DEPFILES := $(patsubst %.o,$(OUTDIR)/%.d,$(OBJS))
 
-.PHONY: all clean
+.PHONY: all native run-native package package-native package-build package-mlp1 mlp1 install-jawaka-app adb-stage-pak-mlp1 clean check-sdl
 
-all: $(EXECUTABLE)
+all: native
 
-$(EXECUTABLE): $(addprefix $(OUTDIR)/,$(OBJS))
-	$(SUM) "  LINK    $@"
-	$(SUM) "  LINK    $(LINKFLAGS)"
-	$(CMD)$(CXX) $(LINKFLAGS) -o $@ $^
+native: $(EXECUTABLE)
 
-$(OUTDIR)/%.o: src/%.cpp
-	@mkdir -p $(@D)
-	$(SUM) "  CXX     $@"
-	$(CMD)$(CXX) $(CXXFLAGS) -MP -MMD -MF $(@:%.o=%.d) -c $< -o $@
-	@touch $@ # Force .o file to be newer than .d file.
+check-sdl:
+	@pkg-config --exists sdl2 SDL2_image SDL2_ttf 2>/dev/null || \
+		( echo "SDL2 libraries not found. Install with: brew install sdl2 sdl2_image sdl2_ttf" && exit 1 )
 
-$(OUTDIR)/%.o: src/%.c
-	@mkdir -p $(@D)
-	$(SUM) "  CXX     $@"
-	$(CMD)$(CXX) $(CXXFLAGS) -MP -MMD -MF $(@:%.o=%.d) -c $< -o $@
-	@touch $@ # Force .o file to be newer than .d file.
+$(BUILD)/bin:
+	@mkdir -p "$@"
+
+$(EXECUTABLE): $(addprefix $(OUTDIR)/,$(OBJS)) | $(BUILD)/bin
+	$(CXX) -o "$@" $^ $(LINKFLAGS_COMMON)
+
+$(OUTDIR)/%.o: src/%.cpp | check-sdl
+	@mkdir -p "$(@D)"
+	$(CXX) $(CXXFLAGS_COMMON) -MP -MMD -MF "$(@:%.o=%.d)" -c "$<" -o "$@"
+
+$(OUTDIR)/%.o: src/%.c | check-sdl
+	@mkdir -p "$(@D)"
+	$(CXX) $(CXXFLAGS_COMMON) -MP -MMD -MF "$(@:%.o=%.d)" -c "$<" -o "$@"
+
+run-native: native
+	JAWAKA_SDCARD_ROOT="$(JAWAKA_SDCARD_ROOT)" \
+	"$(EXECUTABLE)" --res-dir "$(CURDIR)/res"
+
+package package-native: native
+	$(MAKE) BUILD="$(BUILD)" PLATFORM="$(PLATFORM)" package-build
+
+package-build:
+	@rm -rf "$(PACKAGE_ROOT)"
+	@mkdir -p "$(PACKAGE_DIR)/bin" "$(PACKAGE_DIR)/res"
+	@cp -f "$(EXECUTABLE)" "$(PACKAGE_DIR)/bin/$(APP_BIN_NAME)"
+	@cp -Rf res/. "$(PACKAGE_DIR)/res/"
+	@if [ -f "/Volumes/Storage/UMRK/Catastrophe/res/font.ttf" ]; then cp -f "/Volumes/Storage/UMRK/Catastrophe/res/font.ttf" "$(PACKAGE_DIR)/res/font.ttf"; fi
+	@cp -f "pak/launch.sh" "$(PACKAGE_DIR)/launch.sh"
+	@printf '{ "name": "Thing-File", "icon": "", "platform": "$(PLATFORM_ID)", "pak_version": "0.1.0", "min_jawaka_version": "0.0.1" }\n' > "$(PACKAGE_DIR)/pak.json"
+	@chmod 755 "$(PACKAGE_DIR)/launch.sh" "$(PACKAGE_DIR)/bin/$(APP_BIN_NAME)"
+	@find "$(PACKAGE_DIR)" -maxdepth 3 -type f -print | sort
+
+mlp1:
+	docker run --rm \
+		-v "$(WORKSPACE_ROOT)":/workspace \
+		-w /workspace/Thing-File \
+		"$(MLP1_TOOLCHAIN_IMAGE)" \
+		make PLATFORM=mlp1 BUILD=build/mlp1 native
+
+package-mlp1: mlp1
+	$(MAKE) PLATFORM=mlp1 BUILD=build/mlp1 package-build
+
+install-jawaka-app: package-native
+	@mkdir -p "$(JAWAKA_SDCARD_ROOT)/Apps"
+	@rm -rf "$(JAWAKA_SDCARD_ROOT)/Apps/$(PACKAGE_NAME)"
+	@cp -R "$(PACKAGE_DIR)" "$(JAWAKA_SDCARD_ROOT)/Apps/$(PACKAGE_NAME)"
+	@echo "Installed $(PACKAGE_NAME) to $(JAWAKA_SDCARD_ROOT)/Apps"
+
+adb-stage-pak-mlp1: package-mlp1
+	scripts/adb-stage-pak.sh
 
 clean:
-	$(SUM) "  RM      $(OUTDIR)"
-	$(CMD)rm -rf $(OUTDIR)
+	rm -rf "$(BUILD)"
 
-# Load dependency files.
 -include $(DEPFILES)
-
-# Generate dependencies that do not exist yet.
-# This is only in case some .d files have been deleted;
-# in normal operation this rule is never triggered.
-$(DEPFILES):
