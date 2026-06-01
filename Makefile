@@ -3,8 +3,15 @@ SHELL := /bin/bash
 CXX ?= c++
 BUILD ?= build
 WORKSPACE_ROOT ?= $(abspath ..)
+CATASTROPHE_DIR ?= $(WORKSPACE_ROOT)/Catastrophe
 MLP1_TOOLCHAIN_IMAGE ?= ghcr.io/utility-muffin-research-kitchen/mlp1-toolchain:local
-JAWAKA_SDCARD_ROOT ?= /Volumes/Storage/UMRK/Jawaka/mock-sdcard
+JAWAKA_SDCARD_ROOT ?= $(WORKSPACE_ROOT)/Jawaka/mock-sdcard
+SDCARD_PATH ?= $(JAWAKA_SDCARD_ROOT)
+UMRK_PLATFORM_PATH ?= $(SDCARD_PATH)/UMRK/mac
+APPS_PATH ?= $(SDCARD_PATH)/Apps
+MLP1_REMOTE_SDCARD_PATH ?= /mnt/sdcard
+MLP1_SYSTEM_PATH ?= $(MLP1_REMOTE_SDCARD_PATH)/UMRK/mlp1
+MLP1_APPS_PATH ?= $(MLP1_REMOTE_SDCARD_PATH)/Apps
 
 APP_NAME := Thing-File
 APP_BIN_NAME := thing-file
@@ -29,13 +36,13 @@ ifeq ($(shell uname -s),Darwin)
 LINKFLAGS_COMMON += -framework CoreFoundation
 endif
 
-FONTS_NATIVE := {"/Volumes/Storage/UMRK/Catastrophe/res/font.ttf",8},{"SourceCodePro-Semibold.ttf",8},{"SourceCodePro-Regular.ttf",8}
-FONTS_MLP1 := {"/mnt/sdcard/Apps/Thing-File.pak/res/font.ttf",8},{"SourceCodePro-Semibold.ttf",8},{"SourceCodePro-Regular.ttf",8}
+FONTS_NATIVE := {"$(CATASTROPHE_DIR)/res/font.ttf",8},{"SourceCodePro-Semibold.ttf",8},{"SourceCodePro-Regular.ttf",8}
+FONTS_MLP1 := {"$(MLP1_APPS_PATH)/$(PACKAGE_NAME)/res/font.ttf",8},{"SourceCodePro-Semibold.ttf",8},{"SourceCodePro-Regular.ttf",8}
 
 ifeq ($(PLATFORM),mlp1)
 PLATFORM_ID := mlp1
-PATH_DEFAULT := /mnt/sdcard
-PATH_DEFAULT_RIGHT := /mnt/sdcard/UMRK
+PATH_DEFAULT := $(MLP1_REMOTE_SDCARD_PATH)
+PATH_DEFAULT_RIGHT := $(MLP1_SYSTEM_PATH)
 FILE_SYSTEM := /dev/mmcblk1p1
 SCREEN_WIDTH := 480
 SCREEN_HEIGHT := 360
@@ -44,8 +51,8 @@ PPU_Y := 2
 CXXFLAGS_COMMON += -DPLATFORM_MLP1 -DFONTS='$(FONTS_MLP1)'
 else
 PLATFORM_ID := mac
-PATH_DEFAULT := $(JAWAKA_SDCARD_ROOT)
-PATH_DEFAULT_RIGHT := $(JAWAKA_SDCARD_ROOT)/UMRK/mac
+PATH_DEFAULT := $(SDCARD_PATH)
+PATH_DEFAULT_RIGHT := $(UMRK_PLATFORM_PATH)
 FILE_SYSTEM := /
 SCREEN_WIDTH := 640
 SCREEN_HEIGHT := 480
@@ -99,6 +106,9 @@ $(OUTDIR)/%.o: src/%.c | check-sdl
 	$(CXX) $(CXXFLAGS_COMMON) -MP -MMD -MF "$(@:%.o=%.d)" -c "$<" -o "$@"
 
 run-native: native
+	SDCARD_PATH="$(SDCARD_PATH)" \
+	UMRK_PLATFORM_PATH="$(UMRK_PLATFORM_PATH)" \
+	APPS_PATH="$(APPS_PATH)" \
 	JAWAKA_SDCARD_ROOT="$(JAWAKA_SDCARD_ROOT)" \
 	"$(EXECUTABLE)" --res-dir "$(CURDIR)/res"
 
@@ -110,7 +120,7 @@ package-build:
 	@mkdir -p "$(PACKAGE_DIR)/bin" "$(PACKAGE_DIR)/res"
 	@cp -f "$(EXECUTABLE)" "$(PACKAGE_DIR)/bin/$(APP_BIN_NAME)"
 	@cp -Rf res/. "$(PACKAGE_DIR)/res/"
-	@if [ -f "/Volumes/Storage/UMRK/Catastrophe/res/font.ttf" ]; then cp -f "/Volumes/Storage/UMRK/Catastrophe/res/font.ttf" "$(PACKAGE_DIR)/res/font.ttf"; fi
+	@if [ -f "$(CATASTROPHE_DIR)/res/font.ttf" ]; then cp -f "$(CATASTROPHE_DIR)/res/font.ttf" "$(PACKAGE_DIR)/res/font.ttf"; fi
 	@cp -f "pak/launch.sh" "$(PACKAGE_DIR)/launch.sh"
 	@printf '{ "name": "Thing-File", "icon": "", "platform": "$(PLATFORM_ID)", "pak_version": "0.1.0", "min_jawaka_version": "0.0.1" }\n' > "$(PACKAGE_DIR)/pak.json"
 	@chmod 755 "$(PACKAGE_DIR)/launch.sh" "$(PACKAGE_DIR)/bin/$(APP_BIN_NAME)"
@@ -127,10 +137,10 @@ package-mlp1: mlp1
 	$(MAKE) PLATFORM=mlp1 BUILD=build/mlp1 package-build
 
 install-jawaka-app: package-native
-	@mkdir -p "$(JAWAKA_SDCARD_ROOT)/Apps"
-	@rm -rf "$(JAWAKA_SDCARD_ROOT)/Apps/$(PACKAGE_NAME)"
-	@cp -R "$(PACKAGE_DIR)" "$(JAWAKA_SDCARD_ROOT)/Apps/$(PACKAGE_NAME)"
-	@echo "Installed $(PACKAGE_NAME) to $(JAWAKA_SDCARD_ROOT)/Apps"
+	@mkdir -p "$(APPS_PATH)"
+	@rm -rf "$(APPS_PATH)/$(PACKAGE_NAME)"
+	@cp -R "$(PACKAGE_DIR)" "$(APPS_PATH)/$(PACKAGE_NAME)"
+	@echo "Installed $(PACKAGE_NAME) to $(APPS_PATH)"
 
 adb-stage-pak-mlp1: package-mlp1
 	scripts/adb-stage-pak.sh

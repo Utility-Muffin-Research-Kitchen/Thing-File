@@ -3,15 +3,37 @@ set -eu
 
 APP_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
 BIN="$APP_DIR/bin/thing-file"
+PAK_SDCARD_ROOT=$(CDPATH= cd -- "$APP_DIR/../.." && pwd)
+MLP1_DEFAULT_SDCARD_PATH=/mnt/sdcard
 
-if [ -d /mnt/sdcard ]; then
-    DEFAULT_LEFT=/mnt/sdcard
-    DEFAULT_RIGHT=/mnt/sdcard/UMRK
+if [ -n "${UMRK_ENV_FILE:-}" ] && [ -f "$UMRK_ENV_FILE" ]; then
+    . "$UMRK_ENV_FILE"
+elif [ -n "${SDCARD_PATH:-}" ] && [ -f "$SDCARD_PATH/umrk-launcher/env.sh" ]; then
+    . "$SDCARD_PATH/umrk-launcher/env.sh"
+elif [ -f "$PAK_SDCARD_ROOT/umrk-launcher/env.sh" ]; then
+    . "$PAK_SDCARD_ROOT/umrk-launcher/env.sh"
+fi
+
+if [ -z "${PLATFORM:-}" ]; then
+    case "$PAK_SDCARD_ROOT" in
+        "$MLP1_DEFAULT_SDCARD_PATH") PLATFORM=mlp1 ;;
+        *) PLATFORM=mac ;;
+    esac
+fi
+SDCARD_PATH=${SDCARD_PATH:-${JAWAKA_SDCARD_ROOT:-$PAK_SDCARD_ROOT}}
+case "$PLATFORM" in
+    tg5040|tg5050|my355) DEFAULT_SYSTEM_PATH=$SDCARD_PATH/.system/$PLATFORM ;;
+    *) DEFAULT_SYSTEM_PATH=$SDCARD_PATH/UMRK/$PLATFORM ;;
+esac
+SYSTEM_PATH=${SYSTEM_PATH:-$DEFAULT_SYSTEM_PATH}
+UMRK_PLATFORM_PATH=${UMRK_PLATFORM_PATH:-$SYSTEM_PATH}
+export PLATFORM SDCARD_PATH SYSTEM_PATH UMRK_PLATFORM_PATH
+
+DEFAULT_LEFT=$SDCARD_PATH
+DEFAULT_RIGHT=$UMRK_PLATFORM_PATH
+DEFAULT_FS=/
+if [ "${PLATFORM:-}" = "mlp1" ]; then
     DEFAULT_FS=/dev/mmcblk1p1
-else
-    DEFAULT_LEFT=${JAWAKA_SDCARD_ROOT:-$(CDPATH= cd -- "$APP_DIR/../.." && pwd)}
-    DEFAULT_RIGHT="$DEFAULT_LEFT/UMRK/mac"
-    DEFAULT_FS=/
 fi
 
 LEFT=${UMRK_THING_FILE_LEFT:-$DEFAULT_LEFT}

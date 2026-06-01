@@ -20,7 +20,6 @@ create directories, inspect disk usage, and execute files.
 ## Build
 
 ```sh
-cd /Volumes/Storage/UMRK/Thing-File
 make native
 make package-native
 make install-jawaka-app
@@ -32,7 +31,6 @@ make adb-stage-pak-mlp1
 ## Run Desktop Preview
 
 ```sh
-cd /Volumes/Storage/UMRK/Thing-File
 make run-native
 ```
 
@@ -66,8 +64,12 @@ build/package/Thing-File.pak/
 
 `launch.sh` writes a temporary config with the active left/right panel defaults:
 
-- MLP1: `/mnt/sdcard` and `/mnt/sdcard/UMRK`
-- macOS: `$JAWAKA_SDCARD_ROOT` and `$JAWAKA_SDCARD_ROOT/UMRK/mac`
+- left panel: `SDCARD_PATH`
+- right panel: `UMRK_PLATFORM_PATH` (or `SYSTEM_PATH`)
+
+It sources `$SDCARD_PATH/umrk-launcher/env.sh` when present. Direct launches
+can still override the panels with `UMRK_THING_FILE_LEFT` and
+`UMRK_THING_FILE_RIGHT`.
 
 ## Upstream And License Notes
 
