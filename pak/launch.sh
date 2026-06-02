@@ -33,6 +33,9 @@ DEFAULT_LEFT=$SDCARD_PATH
 DEFAULT_RIGHT=$UMRK_PLATFORM_PATH
 DEFAULT_FS=/
 if [ "${PLATFORM:-}" = "mlp1" ]; then
+    if [ -d /media ]; then
+        DEFAULT_RIGHT=/media
+    fi
     DEFAULT_FS=/dev/mmcblk1p1
 fi
 

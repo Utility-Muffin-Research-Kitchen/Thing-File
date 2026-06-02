@@ -65,7 +65,9 @@ build/package/Thing-File.pak/
 `launch.sh` writes a temporary config with the active left/right panel defaults:
 
 - left panel: `SDCARD_PATH`
-- right panel: `UMRK_PLATFORM_PATH` (or `SYSTEM_PATH`)
+- right panel: `UMRK_PLATFORM_PATH` (or `SYSTEM_PATH`), except on MLP1 where it
+  defaults to `/media` when present so secondary SD mounts like
+  `/media/sdcard1` are immediately visible
 
 It sources `$SDCARD_PATH/umrk-launcher/env.sh` when present. Direct launches
 can still override the panels with `UMRK_THING_FILE_LEFT` and
