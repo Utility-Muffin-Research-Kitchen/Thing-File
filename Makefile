@@ -7,10 +7,10 @@ CATASTROPHE_DIR ?= $(WORKSPACE_ROOT)/Catastrophe
 MLP1_TOOLCHAIN_IMAGE ?= ghcr.io/utility-muffin-research-kitchen/mlp1-toolchain:local
 JAWAKA_SDCARD_ROOT ?= $(WORKSPACE_ROOT)/Jawaka/mock-sdcard
 SDCARD_PATH ?= $(JAWAKA_SDCARD_ROOT)
-UMRK_PLATFORM_PATH ?= $(SDCARD_PATH)/UMRK/mac
+UMRK_PLATFORM_PATH ?= $(SDCARD_PATH)/.system/leaf/platforms/mac
 APPS_PATH ?= $(SDCARD_PATH)/Apps
 MLP1_REMOTE_SDCARD_PATH ?= /mnt/sdcard
-MLP1_SYSTEM_PATH ?= $(MLP1_REMOTE_SDCARD_PATH)/UMRK/mlp1
+MLP1_SYSTEM_PATH ?= $(MLP1_REMOTE_SDCARD_PATH)/.system/leaf/platforms/mlp1
 MLP1_APPS_PATH ?= $(MLP1_REMOTE_SDCARD_PATH)/Apps
 
 APP_NAME := Thing-File

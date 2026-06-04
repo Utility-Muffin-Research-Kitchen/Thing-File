@@ -8,10 +8,10 @@ MLP1_DEFAULT_SDCARD_PATH=/mnt/sdcard
 
 if [ -n "${UMRK_ENV_FILE:-}" ] && [ -f "$UMRK_ENV_FILE" ]; then
     . "$UMRK_ENV_FILE"
-elif [ -n "${SDCARD_PATH:-}" ] && [ -f "$SDCARD_PATH/umrk-launcher/env.sh" ]; then
-    . "$SDCARD_PATH/umrk-launcher/env.sh"
-elif [ -f "$PAK_SDCARD_ROOT/umrk-launcher/env.sh" ]; then
-    . "$PAK_SDCARD_ROOT/umrk-launcher/env.sh"
+elif [ -n "${SDCARD_PATH:-}" ] && [ -f "$SDCARD_PATH/.system/leaf/launcher/env.sh" ]; then
+    . "$SDCARD_PATH/.system/leaf/launcher/env.sh"
+elif [ -f "$PAK_SDCARD_ROOT/.system/leaf/launcher/env.sh" ]; then
+    . "$PAK_SDCARD_ROOT/.system/leaf/launcher/env.sh"
 fi
 
 if [ -z "${PLATFORM:-}" ]; then
@@ -22,8 +22,7 @@ if [ -z "${PLATFORM:-}" ]; then
 fi
 SDCARD_PATH=${SDCARD_PATH:-${JAWAKA_SDCARD_ROOT:-$PAK_SDCARD_ROOT}}
 case "$PLATFORM" in
-    tg5040|tg5050|my355) DEFAULT_SYSTEM_PATH=$SDCARD_PATH/.system/$PLATFORM ;;
-    *) DEFAULT_SYSTEM_PATH=$SDCARD_PATH/UMRK/$PLATFORM ;;
+    *) DEFAULT_SYSTEM_PATH=$SDCARD_PATH/.system/leaf/platforms/$PLATFORM ;;
 esac
 SYSTEM_PATH=${SYSTEM_PATH:-$DEFAULT_SYSTEM_PATH}
 UMRK_PLATFORM_PATH=${UMRK_PLATFORM_PATH:-$SYSTEM_PATH}
