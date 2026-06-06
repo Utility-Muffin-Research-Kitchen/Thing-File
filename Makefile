@@ -11,7 +11,7 @@ UMRK_PLATFORM_PATH ?= $(SDCARD_PATH)/.system/leaf/platforms/mac
 APPS_PATH ?= $(SDCARD_PATH)/Apps
 MLP1_REMOTE_SDCARD_PATH ?= /mnt/sdcard
 MLP1_SYSTEM_PATH ?= $(MLP1_REMOTE_SDCARD_PATH)/.system/leaf/platforms/mlp1
-MLP1_APPS_PATH ?= $(MLP1_REMOTE_SDCARD_PATH)/Apps
+MLP1_APPS_PATH ?= $(MLP1_REMOTE_SDCARD_PATH)/Apps/mlp1
 
 APP_NAME := Thing-File
 APP_BIN_NAME := thing-file
@@ -81,7 +81,7 @@ OBJS := \
 
 DEPFILES := $(patsubst %.o,$(OUTDIR)/%.d,$(OBJS))
 
-.PHONY: all native run-native package package-native package-build package-mlp1 mlp1 install-jawaka-app adb-stage-pak-mlp1 clean check-sdl
+.PHONY: all native run-native package package-native package-build package-platform package-mlp1 mlp1 install-jawaka-app adb-stage-pak-mlp1 clean check-sdl
 
 all: native
 
@@ -115,6 +115,14 @@ run-native: native
 package package-native: native
 	$(MAKE) BUILD="$(BUILD)" PLATFORM="$(PLATFORM)" package-build
 
+package-platform:
+	@test -n "$(PLATFORM)" || { echo "usage: make package-platform PLATFORM=<platform>" >&2; exit 1; }
+	@case "$(PLATFORM)" in \
+		mlp1) $(MAKE) package-mlp1 ;; \
+		mac) $(MAKE) PLATFORM=mac package-native ;; \
+		*) echo "unsupported Thing-File package platform: $(PLATFORM)" >&2; exit 1 ;; \
+	esac
+
 package-build:
 	@rm -rf "$(PACKAGE_ROOT)"
 	@mkdir -p "$(PACKAGE_DIR)/bin" "$(PACKAGE_DIR)/res"
@@ -137,10 +145,10 @@ package-mlp1: mlp1
 	$(MAKE) PLATFORM=mlp1 BUILD=build/mlp1 package-build
 
 install-jawaka-app: package-native
-	@mkdir -p "$(APPS_PATH)"
-	@rm -rf "$(APPS_PATH)/$(PACKAGE_NAME)"
-	@cp -R "$(PACKAGE_DIR)" "$(APPS_PATH)/$(PACKAGE_NAME)"
-	@echo "Installed $(PACKAGE_NAME) to $(APPS_PATH)"
+	@mkdir -p "$(APPS_PATH)/$(PLATFORM_ID)"
+	@rm -rf "$(APPS_PATH)/$(PLATFORM_ID)/$(PACKAGE_NAME)"
+	@cp -R "$(PACKAGE_DIR)" "$(APPS_PATH)/$(PLATFORM_ID)/$(PACKAGE_NAME)"
+	@echo "Installed $(PACKAGE_NAME) to $(APPS_PATH)/$(PLATFORM_ID)"
 
 adb-stage-pak-mlp1: package-mlp1
 	scripts/adb-stage-pak.sh

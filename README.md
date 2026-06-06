@@ -15,7 +15,8 @@ create directories, inspect disk usage, and execute files.
 - native macOS preview build
 - Miniloong Pocket 1 build through the UMRK MLP1 toolchain image
 - local UMRK input adapter mirroring Catastrophe's virtual button model
-- Jawaka `Apps/Thing-File.pak` package generation and ADB staging
+- Jawaka `Thing-File.pak` package generation and Leaf-owned staging to
+  `Apps/<platform>/`
 
 ## Build
 
