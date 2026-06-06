@@ -70,7 +70,8 @@ build/package/Thing-File.pak/
   defaults to `/media` when present so secondary SD mounts like
   `/media/sdcard1` are immediately visible
 
-It sources `$SDCARD_PATH/.system/leaf/launcher/env.sh` when present. Direct
+It sources `$SDCARD_PATH/.system/leaf/platforms/$PLATFORM/launcher/env.sh`
+when present. Direct
 launches can still override the panels with `UMRK_THING_FILE_LEFT` and
 `UMRK_THING_FILE_RIGHT`.
 
