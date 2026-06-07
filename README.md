@@ -23,11 +23,13 @@ create directories, inspect disk usage, and execute files.
 ```sh
 make native
 make package-native
-make install-jawaka-app
 make mlp1
 make package-mlp1
-make adb-stage-pak-mlp1
+make package-platform PLATFORM=mlp1
 ```
+
+`package-platform PLATFORM=mlp1` is the target Leaf dispatches when staging
+Thing-File to a device.
 
 ## Run Desktop Preview
 
@@ -56,7 +58,8 @@ upstream Commander windows.
 `make package-native` or `make package-mlp1` creates:
 
 ```text
-build/package/Thing-File.pak/
+build/package/Thing-File.pak/          # native package
+build/mlp1/package/Thing-File.pak/     # MLP1 package
   bin/thing-file
   launch.sh
   pak.json
@@ -74,6 +77,16 @@ It sources `$SDCARD_PATH/.system/leaf/platforms/$PLATFORM/launcher/env.sh`
 when present. Direct
 launches can still override the panels with `UMRK_THING_FILE_LEFT` and
 `UMRK_THING_FILE_RIGHT`.
+
+Preferred MLP1 staging is from the sibling `Leaf` repo:
+
+```sh
+cd ../Leaf
+make stage-app APP=Thing-File DEVICE=mlp1
+```
+
+For targeted repo-local ADB debugging, `make adb-stage-pak-mlp1` still packages
+and pushes the pak through `scripts/adb-stage-pak.sh`.
 
 ## Upstream And License Notes
 
