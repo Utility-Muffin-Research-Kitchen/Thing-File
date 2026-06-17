@@ -130,7 +130,7 @@ package-build:
 	@cp -Rf res/. "$(PACKAGE_DIR)/res/"
 	@if [ -f "$(CATASTROPHE_DIR)/res/font.ttf" ]; then cp -f "$(CATASTROPHE_DIR)/res/font.ttf" "$(PACKAGE_DIR)/res/font.ttf"; fi
 	@cp -f "pak/launch.sh" "$(PACKAGE_DIR)/launch.sh"
-	@printf '{ "name": "Thing-File", "icon": "", "platform": "$(PLATFORM_ID)", "pak_version": "0.1.0", "min_jawaka_version": "0.0.1" }\n' > "$(PACKAGE_DIR)/pak.json"
+	@printf '{ "name": "File Explorer", "icon": "res/icon.png", "platform": "$(PLATFORM_ID)", "pak_version": "0.1.0", "min_jawaka_version": "0.0.1" }\n' > "$(PACKAGE_DIR)/pak.json"
 	@chmod 755 "$(PACKAGE_DIR)/launch.sh" "$(PACKAGE_DIR)/bin/$(APP_BIN_NAME)"
 	@find "$(PACKAGE_DIR)" -maxdepth 3 -type f -print | sort
 
