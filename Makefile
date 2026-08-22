@@ -53,7 +53,8 @@ LINKFLAGS_COMMON += -framework CoreFoundation
 endif
 
 FONTS_NATIVE := {"$(CATASTROPHE_DIR)/res/font.ttf",8},{"SourceCodePro-Semibold.ttf",8},{"SourceCodePro-Regular.ttf",8}
-FONTS_MLP1 := {"$(MLP1_APPS_PATH)/$(PACKAGE_NAME)/res/font.ttf",8},{"SourceCodePro-Semibold.ttf",8},{"SourceCodePro-Regular.ttf",8}
+LEAF_CJK_FONT := fonts/SourceHanSansCN/SourceHanSansCN-Regular.otf
+FONTS_MLP1 := {"$(MLP1_APPS_PATH)/$(PACKAGE_NAME)/res/font.ttf",8},{"$(MLP1_APPS_PATH)/$(PACKAGE_NAME)/res/$(LEAF_CJK_FONT)",8},{"SourceCodePro-Semibold.ttf",8},{"SourceCodePro-Regular.ttf",8}
 
 ifeq ($(PLATFORM),mlp1)
 PLATFORM_ID := mlp1
@@ -145,6 +146,11 @@ package-build:
 	@cp -f "$(EXECUTABLE)" "$(PACKAGE_DIR)/bin/$(APP_BIN_NAME)"
 	@cp -Rf res/. "$(PACKAGE_DIR)/res/"
 	@if [ -f "$(CATASTROPHE_DIR)/res/font.ttf" ]; then cp -f "$(CATASTROPHE_DIR)/res/font.ttf" "$(PACKAGE_DIR)/res/font.ttf"; fi
+	@if [ "$(PLATFORM_ID)" = "mlp1" ]; then \
+		test -f "$(CATASTROPHE_DIR)/res/$(LEAF_CJK_FONT)" || { echo "missing Leaf CJK font: $(CATASTROPHE_DIR)/res/$(LEAF_CJK_FONT)" >&2; exit 1; }; \
+		mkdir -p "$(PACKAGE_DIR)/res/fonts/SourceHanSansCN"; \
+		cp -f "$(CATASTROPHE_DIR)/res/$(LEAF_CJK_FONT)" "$(PACKAGE_DIR)/res/$(LEAF_CJK_FONT)"; \
+	fi
 	@cp -f "pak/launch.sh" "$(PACKAGE_DIR)/launch.sh"
 	@printf '{ "name": "File Explorer", "icon": "res/icon.png", "platform": "$(PLATFORM_ID)", "pak_version": "0.1.0", "min_jawaka_version": "0.0.1" }\n' > "$(PACKAGE_DIR)/pak.json"
 	@if [ "$(PLATFORM_ID)" = "mlp1" ]; then \
