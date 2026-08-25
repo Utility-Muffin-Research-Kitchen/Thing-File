@@ -11,6 +11,7 @@
 #endif
 #include "def.h"
 #include "fileutils.h"
+#include "i18n.h"
 #include "resourceManager.h"
 #include "screen.h"
 #include "sdl_ttf_multifont.h"
@@ -244,7 +245,7 @@ void hastalavista(void)
 void pleaseWait(void)
 {
     SDLSurfaceUniquePtr text_surface { renderText(
-        CResourceManager::instance().getFonts(), "Please wait...",
+        CResourceManager::instance().getFonts(), T("Please wait..."),
         Globals::g_colorTextNormal, { COLOR_BG_2 }) };
     const int border_x = static_cast<int>(DIALOG_BORDER * screen.ppu_x);
     const int border_y = static_cast<int>(DIALOG_BORDER * screen.ppu_y);

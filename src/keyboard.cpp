@@ -7,6 +7,7 @@
 
 #include "config.h"
 #include "def.h"
+#include "i18n.h"
 #include "resourceManager.h"
 #include "screen.h"
 #include "sdlutils.h"
@@ -189,8 +190,8 @@ void CKeyboard::init()
             *surface, text_field_rect_.x, text_field_rect_.y);
 
         // OK / Cancel buttons:
-        renderButton(*surface, cancel_rect_, "Cancel");
-        renderButton(*surface, ok_rect_, "OK");
+        renderButton(*surface, cancel_rect_, T("Cancel"));
+        renderButton(*surface, ok_rect_, T("OK"));
     }
 
     renderKeys(surfaces_, kb_buttons_rect_.x, kb_buttons_rect_.y,
@@ -203,17 +204,17 @@ void CKeyboard::init()
     cancel_highlighted_.reset(
         SDL_utils::createSurface(cancel_rect_.w, cancel_rect_.h));
     renderButtonHighlighted(*cancel_highlighted_,
-        SDL_Rect { 0, 0, cancel_rect_.w, cancel_rect_.h }, "Cancel");
+        SDL_Rect { 0, 0, cancel_rect_.w, cancel_rect_.h }, T("Cancel"));
     ok_highlighted_.reset(SDL_utils::createSurface(ok_rect_.w, ok_rect_.h));
     renderButtonHighlighted(
-        *ok_highlighted_, SDL_Rect { 0, 0, ok_rect_.w, ok_rect_.h }, "OK");
+        *ok_highlighted_, SDL_Rect { 0, 0, ok_rect_.w, ok_rect_.h }, T("OK"));
 
     footer_.reset(
         SDL_utils::createImage(screen.actual_w, FOOTER_H * screen.ppu_y,
             SDL_MapRGB(surfaces_[0]->format, COLOR_TITLE_BG)));
     SDL_utils::applyText(screen.w / 2, 1, footer_.get(), m_fonts,
-        "A-Input B-Cancel START-OK L/R⇧ Y← X␣", Globals::g_colorTextTitle,
-//        "A-Input B-Cancel START-OK L/R↑ Y← X␣", Globals::g_colorTextTitle,
+        T("A-Input B-Cancel START-OK L/R⇧ Y← X␣"), Globals::g_colorTextTitle,
+//        T("A-Input B-Cancel START-OK L/R↑ Y← X␣"), Globals::g_colorTextTitle,
         { COLOR_TITLE_BG }, SDL_utils::T_TEXT_ALIGN_CENTER);
 }
 

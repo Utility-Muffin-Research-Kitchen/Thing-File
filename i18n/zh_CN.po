@@ -1,0 +1,239 @@
+# Simplified Chinese -- seed translation
+# Terms reused from the confirmed Leaf zh_CN glossary (Jawaka/i18n/glossary.tsv)
+# where they apply; file-operation wording pending the on-device native review
+# pass (drop a `make i18n-review` TSV into $USERDATA_PATH/Thing-File/i18n/ to
+# iterate without rebuilding).
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8\n"
+
+#, fuzzy
+msgid "%s not found"
+msgstr "未找到 %s"
+
+#, fuzzy
+msgid "%zu items selected"
+msgstr "已选中 %zu 项"
+
+#, fuzzy
+msgid "%zu selected:"
+msgstr "已选中 %zu 项："
+
+#, fuzzy
+msgid "A-Input B-Cancel START-OK L/R⇧ Y← X␣"
+msgstr "A-输入 B-取消 START-确定 L/R⇧ Y← X␣"
+
+#, fuzzy
+msgid "Abort"
+msgstr "中止"
+
+#, fuzzy
+msgid "Available: %s"
+msgstr "可用：%s"
+
+#, fuzzy
+msgid "Cancel"
+msgstr "取消"
+
+#, fuzzy
+msgid "Continue"
+msgstr "继续"
+
+#, fuzzy
+msgid "Copy"
+msgstr "复制"
+
+#, fuzzy
+msgid "Copying %s"
+msgstr "正在复制 %s"
+
+#, fuzzy
+msgid "Creating symlink %s"
+msgstr "正在创建符号链接 %s"
+
+#, fuzzy
+msgid "Delete"
+msgstr "删除"
+
+#, fuzzy
+msgid "Disk info"
+msgstr "磁盘信息"
+
+#, fuzzy
+msgid "Disk information:"
+msgstr "磁盘信息："
+
+#, fuzzy
+msgid "Disk used"
+msgstr "磁盘占用"
+
+#, fuzzy
+msgid "Disk used:"
+msgstr "磁盘占用："
+
+#, fuzzy
+msgid "Disk used: %s"
+msgstr "磁盘占用：%s"
+
+#, fuzzy
+msgid "Duplicate line"
+msgstr "复制此行"
+
+#, fuzzy
+msgid "Edit line"
+msgstr "编辑此行"
+
+#, fuzzy
+msgid "Error copying %s"
+msgstr "复制 %s 出错"
+
+#, fuzzy
+msgid "Error creating %s"
+msgstr "创建 %s 出错"
+
+#, fuzzy
+msgid "Error creating symlink %s"
+msgstr "创建符号链接 %s 出错"
+
+#, fuzzy
+msgid "Error getting disk info"
+msgstr "获取磁盘信息出错"
+
+#, fuzzy
+msgid "Error getting file size"
+msgstr "获取文件大小出错"
+
+#, fuzzy
+msgid "Error moving %s"
+msgstr "移动 %s 出错"
+
+#, fuzzy
+msgid "Error removing %s"
+msgstr "删除 %s 出错"
+
+#, fuzzy
+msgid "Error renaming %s to %s"
+msgstr "将 %s 重命名为 %s 出错"
+
+#, fuzzy
+msgid "Error:"
+msgstr "错误："
+
+#, fuzzy
+msgid "Exec error"
+msgstr "运行错误"
+
+#, fuzzy
+msgid "Execute"
+msgstr "运行"
+
+#, fuzzy
+msgid "File already exists:"
+msgstr "文件已存在："
+
+#, fuzzy
+msgid "File too large (>16 MiB)"
+msgstr "文件过大（>16 MiB）"
+
+#, fuzzy
+msgid "Insert line after"
+msgstr "在下方插入行"
+
+#, fuzzy
+msgid "Insert line before"
+msgstr "在上方插入行"
+
+#, fuzzy
+msgid "Line %zu: %s"
+msgstr "第 %zu 行：%s"
+
+#, fuzzy
+msgid "Move"
+msgstr "移动"
+
+#, fuzzy
+msgid "Moving %s"
+msgstr "正在移动 %s"
+
+#, fuzzy
+msgid "New directory"
+msgstr "新建文件夹"
+
+#, fuzzy
+msgid "No"
+msgstr "否"
+
+#, fuzzy
+msgid "OK"
+msgstr "确定"
+
+#, fuzzy
+msgid "Overwrite %s?"
+msgstr "覆盖 %s？"
+
+#, fuzzy
+msgid "Please wait..."
+msgstr "请稍候..."
+
+#, fuzzy
+msgid "Quit"
+msgstr "退出"
+
+#, fuzzy
+msgid "Remove line"
+msgstr "删除此行"
+
+#, fuzzy
+msgid "Rename"
+msgstr "重命名"
+
+#, fuzzy
+msgid "Saved automatically"
+msgstr "自动保存"
+
+#, fuzzy
+msgid "Select all"
+msgstr "全选"
+
+#, fuzzy
+msgid "Select none"
+msgstr "取消全选"
+
+#, fuzzy
+msgid "Size:"
+msgstr "大小："
+
+#, fuzzy
+msgid "Size: %s"
+msgstr "大小：%s"
+
+#, fuzzy
+msgid "Symlink"
+msgstr "符号链接"
+
+#, fuzzy
+msgid "System:"
+msgstr "系统："
+
+#, fuzzy
+msgid "Unable to open file"
+msgstr "无法打开文件"
+
+#, fuzzy
+msgid "Used: %s (%s)"
+msgstr "已用：%s (%s)"
+
+#, fuzzy
+msgid "View"
+msgstr "查看"
+
+#, fuzzy
+msgid "Yes"
+msgstr "是"
+
+#, fuzzy
+msgid "Yes to all"
+msgstr "全部覆盖"
+
+#, fuzzy
+msgid "lstat failed"
+msgstr "lstat 失败"

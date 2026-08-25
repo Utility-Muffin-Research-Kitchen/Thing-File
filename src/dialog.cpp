@@ -123,7 +123,8 @@ void CDialog::init(void)
     for (auto *img : m_linesImg)
     {
         if (img == nullptr) continue;
-        m_clip.h = img->h;
+        m_clip.h = std::min(img->h,
+            line_height_ - static_cast<int>(2 * screen.ppu_y));
         break;
     }
     m_clip.w = cursor_width - 2 * padding_x_;

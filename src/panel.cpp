@@ -1,6 +1,8 @@
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 #include "panel.h"
+#include "i18n.h"
 #include "resourceManager.h"
 #include "screen.h"
 #include "sdlutils.h"
@@ -197,15 +199,13 @@ void CPanel::render(const bool p_active) const
         }
         l_surfaceTmp = SDL_utils::renderText(m_fonts, m_fileLister[l_i].m_name, *l_color, l_bg);
         const int max_name_width = width() - static_cast<int>(18 * screen.ppu_x);
-        SDL_Rect *text_clip_rect = nullptr;
-        if (l_surfaceTmp->w > max_name_width)
-        {
-            l_rect.x = 0;
-            l_rect.y = 0;
-            l_rect.w = max_name_width;
-            l_rect.h = l_surfaceTmp->h;
-            text_clip_rect = &l_rect;
-        }
+        const int max_name_height = line_height() - static_cast<int>(2 * screen.ppu_y);
+        l_rect = SDL_utils::makeRect(0, 0,
+            std::min(l_surfaceTmp->w, max_name_width),
+            std::min(l_surfaceTmp->h, max_name_height));
+        SDL_Rect *text_clip_rect =
+            (l_rect.w < l_surfaceTmp->w || l_rect.h < l_surfaceTmp->h)
+                ? &l_rect : nullptr;
         SDL_utils::applyPpuScaledSurface(l_x,
             l_y + static_cast<int>(2 * screen.ppu_y), l_surfaceTmp,
             screen.surface, text_clip_rect);
@@ -226,7 +226,7 @@ void CPanel::render(const bool p_active) const
     }
     SDL_utils::applyPpuScaledText(m_x + static_cast<int>(2 * screen.ppu_x),
         footer_y() + footer_padding_top(), screen.surface, m_fonts,
-        "Size:", Globals::g_colorTextTitle, { COLOR_TITLE_BG });
+        T("Size:"), Globals::g_colorTextTitle, { COLOR_TITLE_BG });
     SDL_utils::applyPpuScaledText(
         m_x + width() - static_cast<int>(2 * screen.ppu_x),
         footer_y() + footer_padding_top(), screen.surface, m_fonts, l_footer,

@@ -31,6 +31,7 @@
 #include "def.h"
 #include "dialog.h"
 #include "error_dialog.h"
+#include "i18n.h"
 #include "sdlutils.h"
 
 namespace
@@ -211,8 +212,8 @@ enum class OverwriteDialogResult
 OverwriteDialogResult OverwriteDialog(
     const std::string &dest_filename, bool is_last)
 {
-    CDialog dlg{"File already exists:"};
-    dlg.addLabel("Overwrite " + dest_filename + "?");
+    CDialog dlg{T("File already exists:")};
+    dlg.addLabel(i18n::fmt(T("Overwrite %s?"), dest_filename.c_str()));
     std::vector<OverwriteDialogResult> options {
         OverwriteDialogResult::CANCEL
     };
@@ -220,10 +221,10 @@ OverwriteDialogResult OverwriteDialog(
         dlg.addOption(text);
         options.push_back(value);
     };
-    add_option("Yes", OverwriteDialogResult::YES);
-    if (!is_last) add_option("Yes to all", OverwriteDialogResult::YES_TO_ALL);
-    add_option("No", OverwriteDialogResult::NO);
-    if (!is_last) add_option("Cancel", OverwriteDialogResult::CANCEL);
+    add_option(T("Yes"), OverwriteDialogResult::YES);
+    if (!is_last) add_option(T("Yes to all"), OverwriteDialogResult::YES_TO_ALL);
+    add_option(T("No"), OverwriteDialogResult::NO);
+    if (!is_last) add_option(T("Cancel"), OverwriteDialogResult::CANCEL);
     dlg.init();
     auto res = options[dlg.execute()];
     SDL_utils::renderAll();
@@ -243,8 +244,12 @@ void DefaultProgressFn(
 {
 }
 
+// Both descriptions are complete translated messages with the file name as a
+// %s placeholder (e.g. T("Copying %s") / T("Error copying %s")), so a
+// translator handles the whole sentence rather than fragments around the name.
 void ActionToDir(const std::vector<std::string> &inputs,
-    const std::string &dest_dir, const char *description, ActionFn action_fn,
+    const std::string &dest_dir, const char *action_fmt,
+    const char *error_fmt, ActionFn action_fn,
     ProgressFn progress_fn = &DefaultProgressFn)
 {
     bool confirm_overwrite = true;
@@ -252,9 +257,7 @@ void ActionToDir(const std::vector<std::string> &inputs,
     std::size_t i = 0;
     for (const std::string &input : inputs)
     {
-        action_desc = description;
-        action_desc += ' ';
-        action_desc.append(File_utils::getFileName(input));
+        action_desc = i18n::fmt(action_fmt, File_utils::getFileName(input).c_str());
         const bool is_last = (i == input.size() - 1);
         progress_fn(action_desc, i++, inputs.size());
         JoinPath(dest_dir, File_utils::getFileName(input), dest_filename);
@@ -273,10 +276,9 @@ void ActionToDir(const std::vector<std::string> &inputs,
         const auto action_result = action_fn(input, dest_filename);
         if (!action_result.ok())
         {
-            std::string title = "Error ";
-            title += AsciiToLower(action_desc[0]);
-            title.append(action_desc.data() + 1, action_desc.size() - 1);
-            switch (ErrorDialog(title, action_result.message(), is_last))
+            switch (ErrorDialog(i18n::fmt(error_fmt,
+                                   File_utils::getFileName(input).c_str()),
+                       action_result.message(), is_last))
             {
                 case ErrorDialogResult::CONTINUE: continue;
                 case ErrorDialogResult::ABORT: return;
@@ -324,7 +326,7 @@ ActionResult SyncPath()
 void File_utils::copyFile(
     const std::vector<std::string> &srcs, const std::string &dest_dir)
 {
-    ActionToDir(srcs, dest_dir, "Copying",
+    ActionToDir(srcs, dest_dir, T("Copying %s"), T("Error copying %s"),
         [&](const std::string &src, const std::string & /*dest*/) {
             return Run("cp", "-f", "-r", src, dest_dir);
         });
@@ -334,7 +336,7 @@ void File_utils::copyFile(
 void File_utils::moveFile(
     const std::vector<std::string> &srcs, const std::string &dest_dir)
 {
-    ActionToDir(srcs, dest_dir, "Moving",
+    ActionToDir(srcs, dest_dir, T("Moving %s"), T("Error moving %s"),
         [&](const std::string &src, const std::string &dest) {
             return Run("mv", "-f", src, dest_dir);
         });
@@ -344,7 +346,7 @@ void File_utils::moveFile(
 void File_utils::symlinkFile(
     const std::vector<std::string> &srcs, const std::string &dest_dir)
 {
-    ActionToDir(srcs, dest_dir, "Creating symlink",
+    ActionToDir(srcs, dest_dir, T("Creating symlink %s"), T("Error creating symlink %s"),
         [&](const std::string &src, const std::string &dest) {
             return Run("ln", "-sf", src, dest_dir);
         });
@@ -362,8 +364,9 @@ void File_utils::renameFile(
         if (result.ok()) result = SyncPath();
         if (!result.ok())
         {
-            ErrorDialog("Error renaming " + getFileName(p_file1) + " to "
-                    + getFileName(p_file2),
+            ErrorDialog(i18n::fmt(T("Error renaming %s to %s"),
+                            getFileName(p_file1).c_str(),
+                            getFileName(p_file2).c_str()),
                 result.message());
         }
     }
@@ -376,7 +379,8 @@ void File_utils::removeFile(const std::vector<std::string> &p_files)
         auto result = Run("rm", "-rf", path);
         if (!result.ok())
         {
-            switch (ErrorDialog("Error removing " + path, result.message(),
+            switch (ErrorDialog(i18n::fmt(T("Error removing %s"), path.c_str()),
+                result.message(),
                 /*is_last=*/&path == &p_files.back()))
             {
                 case ErrorDialogResult::CONTINUE: continue;
@@ -390,7 +394,7 @@ void File_utils::makeDirectory(const std::string &p_file)
 {
     auto result = Run("mkdir", "-p", p_file);
     if (result.ok()) result = SyncPath();
-    if (!result.ok()) ErrorDialog("Error creating " + p_file, result.message());
+    if (!result.ok()) ErrorDialog(i18n::fmt(T("Error creating %s"), p_file.c_str()), result.message());
 }
 
 const bool File_utils::fileExists(const std::string &p_path)
@@ -464,7 +468,7 @@ const unsigned long int File_utils::getFileSize(const std::string &p_file)
 {
     struct ::stat l_stat;
     if (::stat(p_file.c_str(), &l_stat) == -1)
-        ErrorDialog("Error getting file size", std::strerror(errno));
+        ErrorDialog(T("Error getting file size"), std::strerror(errno));
     return l_stat.st_size;
 }
 
@@ -478,7 +482,7 @@ void File_utils::diskInfo(void)
         FILE *l_pipe = popen("df -h " FILE_SYSTEM, "r");
         if (l_pipe == NULL)
         {
-            ErrorDialog("Error getting disk info", std::strerror(errno));
+            ErrorDialog(T("Error getting disk info"), std::strerror(errno));
             return;
         }
         while (
@@ -495,17 +499,17 @@ void File_utils::diskInfo(void)
             std::istream_iterator<std::string>(),
             std::back_inserter<std::vector<std::string>>(l_tokens));
         // Display dialog
-        CDialog l_dialog{"Disk information:"};
-        l_dialog.addLabel("Size: " + l_tokens[1]);
-        l_dialog.addLabel("Used: " + l_tokens[2] + " (" + l_tokens[4] + ")");
-        l_dialog.addLabel("Available: " + l_tokens[3]);
-        l_dialog.addOption("OK");
+        CDialog l_dialog{T("Disk information:")};
+        l_dialog.addLabel(i18n::fmt(T("Size: %s"), l_tokens[1].c_str()));
+        l_dialog.addLabel(i18n::fmt(T("Used: %s (%s)"), l_tokens[2].c_str(), l_tokens[4].c_str()));
+        l_dialog.addLabel(i18n::fmt(T("Available: %s"), l_tokens[3].c_str()));
+        l_dialog.addOption(T("OK"));
         l_dialog.init();
         l_dialog.execute();
     }
     else
         ErrorDialog(
-            "Error getting disk info", std::string(FILE_SYSTEM) + " not found");
+            T("Error getting disk info"), i18n::fmt(T("%s not found"), FILE_SYSTEM));
 }
 
 void File_utils::diskUsed(const std::vector<std::string> &p_files)
@@ -523,7 +527,7 @@ void File_utils::diskUsed(const std::vector<std::string> &p_files)
         FILE *l_pipe = popen(l_command.c_str(), "r");
         if (l_pipe == NULL)
         {
-            ErrorDialog("Error getting file size", std::strerror(errno));
+            ErrorDialog(T("Error getting file size"), std::strerror(errno));
             return;
         }
         while (fgets(l_buffer, sizeof(l_buffer), l_pipe) != NULL) { }
@@ -540,12 +544,10 @@ void File_utils::diskUsed(const std::vector<std::string> &p_files)
         l_line = l_tokens[0];
     }
     // Dialog
-    std::ostringstream l_stream;
-    CDialog l_dialog{"Disk used:"};
-    l_stream << p_files.size() << " items selected";
-    l_dialog.addLabel(l_stream.str());
-    l_dialog.addLabel("Disk used: " + l_line);
-    l_dialog.addOption("OK");
+    CDialog l_dialog{T("Disk used:")};
+    l_dialog.addLabel(i18n::fmt(T("%zu items selected"), p_files.size()));
+    l_dialog.addLabel(i18n::fmt(T("Disk used: %s"), l_line.c_str()));
+    l_dialog.addOption(T("OK"));
     l_dialog.init();
     l_dialog.execute();
 }

@@ -9,6 +9,7 @@
 
 #include "error_dialog.h"
 #include "fileutils.h"
+#include "i18n.h"
 
 // Basic file information: whether it's a directory, executable, a symlink, file
 // size, etc.
@@ -56,7 +57,7 @@ inline FileInfo FileInfo::Get(const std::string &path)
     FileInfo result;
     if (::lstat(path.c_str(), &result.st_) == -1)
     {
-        ErrorDialog("lstat failed", std::strerror(errno));
+        ErrorDialog(T("lstat failed"), std::strerror(errno));
         return result;
     }
     result.symlink_ = S_ISLNK(result.st_.st_mode);
