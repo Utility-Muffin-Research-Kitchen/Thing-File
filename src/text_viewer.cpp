@@ -7,6 +7,7 @@
 #include "config.h"
 #include "def.h"
 #include "error_dialog.h"
+#include "i18n.h"
 #include "keyboard.h"
 #include "resourceManager.h"
 #include "screen.h"
@@ -54,7 +55,7 @@ TextViewer::TextViewer(std::string filename)
     std::ifstream input_file(filename_.c_str());
     if (!input_file.is_open()) {
         ErrorDialog(
-            "Unable to open file", filename_ + "\n" + std::strerror(errno));
+            T("Unable to open file"), filename_ + "\n" + std::strerror(errno));
         m_retVal = -1;
         return;
     }
@@ -308,12 +309,12 @@ bool TextViewer::editLine()
         title.resize(len);
         title.append("...");
     }
-    title = "Line " + std::to_string(current_line_ + 1) + ": " + title;
+    title = i18n::fmt(T("Line %zu: %s"), current_line_ + 1, title.c_str());
     CDialog dialog { title };
-    dialog.addLabel("Saved automatically");
+    dialog.addLabel(T("Saved automatically"));
     std::vector<std::function<bool()>> handlers;
 
-    dialog.addOption("Edit line");
+    dialog.addOption(T("Edit line"));
     handlers.push_back([&]() {
         CKeyboard keyboard(lines_[current_line_], /*support_tabs=*/true);
         if (keyboard.execute() == 1
@@ -326,7 +327,7 @@ bool TextViewer::editLine()
         return true;
     });
 
-    dialog.addOption("Duplicate line");
+    dialog.addOption(T("Duplicate line"));
     handlers.push_back([&]() {
         lines_.emplace(
             lines_.begin() + current_line_ + 1, lines_[current_line_]);
@@ -338,7 +339,7 @@ bool TextViewer::editLine()
         return true;
     });
 
-    dialog.addOption("Insert line before");
+    dialog.addOption(T("Insert line before"));
     handlers.push_back([&]() {
         lines_.emplace(lines_.begin() + current_line_);
         lines_for_display_.emplace(lines_for_display_.begin() + current_line_);
@@ -348,7 +349,7 @@ bool TextViewer::editLine()
         return true;
     });
 
-    dialog.addOption("Insert line after");
+    dialog.addOption(T("Insert line after"));
     handlers.push_back([&]() {
         lines_.emplace(lines_.begin() + current_line_ + 1);
         lines_for_display_.emplace(
@@ -358,7 +359,7 @@ bool TextViewer::editLine()
         return true;
     });
 
-    dialog.addOption("Remove line");
+    dialog.addOption(T("Remove line"));
     handlers.push_back([&]() {
         lines_.erase(lines_.begin() + current_line_);
         lines_for_display_.erase(lines_for_display_.begin() + current_line_);

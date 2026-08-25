@@ -10,6 +10,7 @@
 #include "error_dialog.h"
 #include "file_info.h"
 #include "fileutils.h"
+#include "i18n.h"
 #include "image_viewer.h"
 #include "keyboard.h"
 #include "resourceManager.h"
@@ -279,29 +280,29 @@ const bool CCommander::openCopyMenu(void) const
     m_panelSource->getSelectList(l_list);
     {
         bool l_loop(false);
-        std::ostringstream l_stream;
-        l_stream << l_list.size() << " selected:";
-        // File operation dialog
-        CDialog l_dialog { l_stream.str(), {}, [this, &l_dialog]() {
+        // File operation dialog. The count is one translated message; the
+        // direction arrows are composed outside the translation key.
+        CDialog l_dialog { i18n::fmt(T("%zu selected:"), l_list.size()), {}, [this, &l_dialog]() {
                               return Y_LIST_PHYS
                                   + m_panelSource->getHighlightedIndexRelative()
                                   * l_dialog.line_height();
                           } };
+        const bool l_toRight = (m_panelSource == &m_panelLeft);
 
-        l_dialog.addOption(m_panelSource == &m_panelLeft ? "Copy >" : "< Copy");
+        l_dialog.addOption(l_toRight ? std::string(T("Copy")) + " >" : "< " + std::string(T("Copy")));
         handlers.push_back([&]() {
             File_utils::copyFile(l_list, m_panelTarget->getCurrentPath());
             return true;
         });
 
-        l_dialog.addOption(m_panelSource == &m_panelLeft ? "Move >" : "< Move");
+        l_dialog.addOption(l_toRight ? std::string(T("Move")) + " >" : "< " + std::string(T("Move")));
         handlers.push_back([&]() {
             File_utils::moveFile(l_list, m_panelTarget->getCurrentPath());
             return true;
         });
 
-        
-        l_dialog.addOption(m_panelSource == &m_panelLeft ? "Symlink >" : "< Symlink");
+
+        l_dialog.addOption(l_toRight ? std::string(T("Symlink")) + " >" : "< " + std::string(T("Symlink")));
         handlers.push_back([&]() {
             File_utils::symlinkFile(l_list, m_panelTarget->getCurrentPath());
             return true;
@@ -309,7 +310,7 @@ const bool CCommander::openCopyMenu(void) const
 
         if (l_list.size() == 1) {
             // The rename option appears only if one item is selected
-            l_dialog.addOption("Rename");
+            l_dialog.addOption(T("Rename"));
             handlers.push_back([&]() {
                 CKeyboard l_keyboard(m_panelSource->getHighlightedItem());
                 if (l_keyboard.execute() == 1 && !l_keyboard.getInputText().empty() && l_keyboard.getInputText() != m_panelSource->getHighlightedItem())
@@ -321,14 +322,14 @@ const bool CCommander::openCopyMenu(void) const
             });
         }
 
-        l_dialog.addOption("Delete");
+        l_dialog.addOption(T("Delete"));
         handlers.push_back([&]() {
             File_utils::removeFile(l_list);
             return true;
         });
-        const int delete_option = handlers.size(); 
+        const int delete_option = handlers.size();
 
-        l_dialog.addOption("Disk used");
+        l_dialog.addOption(T("Disk used"));
         handlers.push_back([&]() {
             File_utils::diskUsed(l_list);
             return false;
@@ -350,8 +351,8 @@ const bool CCommander::openCopyMenu(void) const
                             + (l_dialog.getHighlightedIndex() + 1)
                             * l_dialog.line_height();
                     } };
-                l_dialog2.addOption("Yes");
-                l_dialog2.addOption("No");
+                l_dialog2.addOption(T("Yes"));
+                l_dialog2.addOption(T("No"));
                 l_dialog2.init();
                 if (l_dialog2.execute() != 1)
                     l_loop = true;
@@ -372,16 +373,16 @@ const bool CCommander::openSystemMenu(void)
     int l_dialogRetVal(0);
     // Selection dialog
     {
-        CDialog l_dialog { "System:", {}, [this, &l_dialog]() {
+        CDialog l_dialog { T("System:"), {}, [this, &l_dialog]() {
                               return Y_LIST_PHYS
                                   + m_panelSource->getHighlightedIndexRelative()
                                   * l_dialog.line_height();
                           } };
-        l_dialog.addOption("Select all");
-        l_dialog.addOption("Select none");
-        l_dialog.addOption("New directory");
-        l_dialog.addOption("Disk info");
-        l_dialog.addOption("Quit");
+        l_dialog.addOption(T("Select all"));
+        l_dialog.addOption(T("Select none"));
+        l_dialog.addOption(T("New directory"));
+        l_dialog.addOption(T("Disk info"));
+        l_dialog.addOption(T("Quit"));
         l_dialog.init();
         l_dialogRetVal = l_dialog.execute();
     }
@@ -450,8 +451,8 @@ OpenFileResult OpenFileDialog(const std::string &path,
         dlg.addOption(text);
         options.push_back(value);
     };
-    add_option("View", OpenFileResult::VIEW);
-    add_option("Execute", OpenFileResult::EXECUTE);
+    add_option(T("View"), OpenFileResult::VIEW);
+    add_option(T("Execute"), OpenFileResult::EXECUTE);
     dlg.init();
     return options[dlg.execute()];
 }
@@ -462,7 +463,7 @@ int ViewFile(const std::string &path)
     constexpr std::size_t kMaxFileSize = 16777216; // = 16 MB
     const auto file_size = File_utils::getFileSize(path);
     if (file_size > kMaxFileSize) {
-        ErrorDialog(path, "Error:", "File too large (>16 MiB)");
+        ErrorDialog(path, T("Error:"), T("File too large (>16 MiB)"));
     } else {
         ImageViewer image_viewer(path);
         if (image_viewer.ok()) {

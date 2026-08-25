@@ -10,6 +10,7 @@
 #include "error_dialog.h"
 #include "commander.h"
 #include "def.h"
+#include "i18n.h"
 #include "resourceManager.h"
 #include "screen.h"
 #include "sdlutils.h"
@@ -90,6 +91,10 @@ int main(int argc, char *argv[])
 
     CResourceManager::SetResDir(cfg.res_dir.c_str());
 
+    // Resolve the language and load the translation table before any font is
+    // opened: the CJK face's position in the font stack depends on it.
+    i18n::init(cfg.res_dir);
+
     // Avoid crash due to the absence of mouse
     char l_s[]="SDL_NOMOUSE=1";
     putenv(l_s);
@@ -150,7 +155,7 @@ int main(int argc, char *argv[])
     CCommander l_commander(l_path, r_path);
 
     if (!exec_error.empty())
-        ErrorDialog("Exec error", exec_error);
+        ErrorDialog(T("Exec error"), exec_error);
 
     // Main loop
     l_commander.execute();

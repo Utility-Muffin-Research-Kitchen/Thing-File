@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <iostream>
 
 #include <SDL_image.h>
@@ -6,6 +7,7 @@
 #else
 #include "sdl_gfx/SDL_rotozoom.h"
 #endif
+#include "i18n.h"
 #include "resourceManager.h"
 #include "def.h"
 #include "screen.h"
@@ -49,17 +51,45 @@ std::string ResDir = RES_DIR "";
 std::string ResPath(const char *path) { return ResDir + path; }
 std::string ResPath(const std::string &path) { return ResDir + path; }
 
+/* The shared CJK face the Leaf platform stages under CAT_FONTS_DIR. Resolved
+   at runtime rather than copied into the package: bundling the ~8 MB face
+   would grow this pak tenfold and leave a second copy of the same asset on the
+   same card. Empty when CAT_FONTS_DIR is unset (direct/manual launches). */
+std::string SharedCjkFontPath() {
+    const char *dir = std::getenv("CAT_FONTS_DIR");
+    if (dir == nullptr || dir[0] == '\0') return std::string();
+    return std::string(dir) +
+        "/fonts/SourceHanSansCN/SourceHanSansCN-Regular.otf";
+}
+
 std::vector<TTF_Font *> LoadFonts(bool low_dpi) {
     const FontSpec *specs = low_dpi ? kLowDpiFonts : kFonts;
     const std::size_t len = low_dpi ? kLowDpiFontsLen : kFontsLen;
 
     std::vector<TTF_Font *> fonts;
-    fonts.reserve(len);
+    fonts.reserve(len + 1);
     for (std::size_t i = 0; i < len; ++i) {
         const std::string &path = specs[i].path;
         auto *font = SDL_utils::loadFont(path.front() == '/' ? path : ResPath(path), specs[i].size * config().disp_ppu_y);
         if (font != nullptr) fonts.push_back(font);
     }
+
+    /* Source Han is the last fallback face in every language, so CJK file
+       names render regardless of the UI language. While a CJK language is
+       active it becomes the first face instead, so Chinese UI strings and the
+       untranslated English around them use one coherent family. Logical size
+       9 follows the upstream fallback-font precedent. A missing or broken
+       shared face is logged by loadFont and simply omitted -- it must never
+       keep the file manager from starting. */
+    const std::string han_path = SharedCjkFontPath();
+    if (!han_path.empty()) {
+        auto *han = SDL_utils::loadFont(han_path, 9 * config().disp_ppu_y);
+        if (han != nullptr) {
+            if (i18n::is_cjk()) fonts.insert(fonts.begin(), han);
+            else fonts.push_back(han);
+        }
+    }
+
     if (fonts.empty()) {
         std::cerr << "No fonts found!" << std::endl;
         exit(1);

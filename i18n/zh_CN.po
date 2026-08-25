@@ -1,0 +1,179 @@
+# Simplified Chinese
+# Terms reused from the confirmed Leaf zh_CN glossary (Jawaka/i18n/glossary.tsv)
+# where they apply; file-operation wording confirmed during the on-device review.
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "%s not found"
+msgstr "未找到 %s"
+
+msgid "%zu items selected"
+msgstr "已选中 %zu 项"
+
+msgid "%zu selected:"
+msgstr "已选中 %zu 项："
+
+msgid "A-Input B-Cancel START-OK L/R⇧ Y← X␣"
+msgstr "A-输入 B-取消 START-确定 L/R⇧ Y← X␣"
+
+msgid "Abort"
+msgstr "中止"
+
+msgid "Available: %s"
+msgstr "可用：%s"
+
+msgid "Cancel"
+msgstr "取消"
+
+msgid "Continue"
+msgstr "继续"
+
+msgid "Copy"
+msgstr "复制"
+
+msgid "Copying %s"
+msgstr "正在复制 %s"
+
+msgid "Creating symlink %s"
+msgstr "正在创建符号链接 %s"
+
+msgid "Delete"
+msgstr "删除"
+
+msgid "Disk info"
+msgstr "磁盘信息"
+
+msgid "Disk information:"
+msgstr "磁盘信息："
+
+msgid "Disk used"
+msgstr "磁盘占用"
+
+msgid "Disk used:"
+msgstr "磁盘占用："
+
+msgid "Disk used: %s"
+msgstr "磁盘占用：%s"
+
+msgid "Duplicate line"
+msgstr "复制此行"
+
+msgid "Edit line"
+msgstr "编辑此行"
+
+msgid "Error copying %s"
+msgstr "复制 %s 出错"
+
+msgid "Error creating %s"
+msgstr "创建 %s 出错"
+
+msgid "Error creating symlink %s"
+msgstr "创建符号链接 %s 出错"
+
+msgid "Error getting disk info"
+msgstr "获取磁盘信息出错"
+
+msgid "Error getting file size"
+msgstr "获取文件大小出错"
+
+msgid "Error moving %s"
+msgstr "移动 %s 出错"
+
+msgid "Error removing %s"
+msgstr "删除 %s 出错"
+
+msgid "Error renaming %s to %s"
+msgstr "将 %s 重命名为 %s 出错"
+
+msgid "Error:"
+msgstr "错误："
+
+msgid "Exec error"
+msgstr "运行错误"
+
+msgid "Execute"
+msgstr "运行"
+
+msgid "File already exists:"
+msgstr "文件已存在："
+
+msgid "File too large (>16 MiB)"
+msgstr "文件过大（>16 MiB）"
+
+msgid "Insert line after"
+msgstr "在下方插入行"
+
+msgid "Insert line before"
+msgstr "在上方插入行"
+
+msgid "Line %zu: %s"
+msgstr "第 %zu 行：%s"
+
+msgid "Move"
+msgstr "移动"
+
+msgid "Moving %s"
+msgstr "正在移动 %s"
+
+msgid "New directory"
+msgstr "新建文件夹"
+
+msgid "No"
+msgstr "否"
+
+msgid "OK"
+msgstr "确定"
+
+msgid "Overwrite %s?"
+msgstr "覆盖 %s？"
+
+msgid "Please wait..."
+msgstr "请稍候..."
+
+msgid "Quit"
+msgstr "退出"
+
+msgid "Remove line"
+msgstr "删除此行"
+
+msgid "Rename"
+msgstr "重命名"
+
+msgid "Saved automatically"
+msgstr "自动保存"
+
+msgid "Select all"
+msgstr "全选"
+
+msgid "Select none"
+msgstr "取消全选"
+
+msgid "Size:"
+msgstr "大小："
+
+msgid "Size: %s"
+msgstr "大小：%s"
+
+msgid "Symlink"
+msgstr "符号链接"
+
+msgid "System:"
+msgstr "系统："
+
+msgid "Unable to open file"
+msgstr "无法打开文件"
+
+msgid "Used: %s (%s)"
+msgstr "已用：%s (%s)"
+
+msgid "View"
+msgstr "查看"
+
+msgid "Yes"
+msgstr "是"
+
+msgid "Yes to all"
+msgstr "全部覆盖"
+
+msgid "lstat failed"
+msgstr "lstat 失败"

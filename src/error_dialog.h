@@ -6,6 +6,7 @@
 
 #include "def.h"
 #include "dialog.h"
+#include "i18n.h"
 
 enum class ErrorDialogResult
 {
@@ -26,12 +27,12 @@ inline ErrorDialogResult ErrorDialog(
     };
     if (!is_last)
     {
-        add_option("Continue", ErrorDialogResult::CONTINUE);
-        add_option("Abort", ErrorDialogResult::ABORT);
+        add_option(T("Continue"), ErrorDialogResult::CONTINUE);
+        add_option(T("Abort"), ErrorDialogResult::ABORT);
     }
     else
     {
-        add_option("OK", ErrorDialogResult::ABORT);
+        add_option(T("OK"), ErrorDialogResult::ABORT);
     }
     dlg.init();
     return options[dlg.execute()];

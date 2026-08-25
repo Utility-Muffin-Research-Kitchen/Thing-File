@@ -1,0 +1,28 @@
+name: i18n
+
+# Two invariants, both cheap:
+#   1. i18n/thing-file.pot matches the code. A UI-string change without a
+#      regenerated .pot means translators are translating against a stale key
+#      list, and the coverage gate is measuring the wrong denominator.
+#   2. Every committed translation parses, has no orphan or duplicate keys,
+#      keeps printf conversions compatible with its key (the runtime loader
+#      refuses a %zu that became %s, which would otherwise misread arguments
+#      in vsnprintf), and reaches the reviewed-coverage release gate.
+# No gettext tooling is needed: extraction is tools/i18n-extract.py, which
+# reads the hand-wrapped literal T() calls xgettext-style scanners miss.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  strings:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify the committed .pot and any translations
+        run: make i18n-check

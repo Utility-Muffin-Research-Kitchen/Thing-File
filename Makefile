@@ -11,6 +11,16 @@ JAWAKA_SDCARD_ROOT ?= $(WORKSPACE_ROOT)/Jawaka/mock-sdcard
 SDCARD_PATH ?= $(JAWAKA_SDCARD_ROOT)
 UMRK_PLATFORM_PATH ?= $(SDCARD_PATH)/.system/leaf/platforms/mac
 APPS_PATH ?= $(SDCARD_PATH)/Apps
+# Shared CJK font root (Leaf stages Catastrophe's res/ as CAT_FONTS_DIR).
+CAT_FONTS_DIR ?= $(CATASTROPHE_DIR)/res
+# Mock of the runtime contract's per-app userdata root for native runs.
+USERDATA_PATH ?= $(SDCARD_PATH)/.userdata/mac
+# Translation authoring/build lane.
+I18N_POS := $(wildcard i18n/*.po)
+I18N_TSV_DIR := $(BUILD)/i18n
+I18N_REVIEW_DIR := $(BUILD)/i18n-review
+I18N_TSV := $(patsubst i18n/%.po,$(I18N_TSV_DIR)/%.tsv,$(I18N_POS))
+I18N_COVERAGE_GATE ?= 90
 MLP1_REMOTE_SDCARD_PATH ?= /mnt/sdcard
 MLP1_SYSTEM_PATH ?= $(MLP1_REMOTE_SDCARD_PATH)/.system/leaf/platforms/mlp1
 MLP1_APPS_PATH ?= $(MLP1_REMOTE_SDCARD_PATH)/Apps/mlp1
@@ -74,7 +84,11 @@ SCREEN_WIDTH := 640
 SCREEN_HEIGHT := 480
 PPU_X := 1
 PPU_Y := 1
-CXXFLAGS_COMMON += -DFONTS='$(FONTS_NATIVE)'
+# The native build runs at PPU 1 and picks the low-DPI font stack; upstream's
+# LOW_DPI_FONTS default names faces this package does not ship. Point it at the
+# same valid faces as the normal stack; runtime font loading inserts the shared
+# Source Han face into either vector.
+CXXFLAGS_COMMON += -DFONTS='$(FONTS_NATIVE)' -DLOW_DPI_FONTS='$(FONTS_NATIVE)'
 endif
 
 CXXFLAGS_COMMON += \
@@ -90,14 +104,14 @@ CXXFLAGS_COMMON += \
 	-DAUTOSCALE_DPI=0
 
 OBJS := \
-	main.o commander.o config.o dialog.o fileLister.o fileutils.o keyboard.o panel.o resourceManager.o \
+	main.o commander.o config.o dialog.o fileLister.o fileutils.o i18n.o keyboard.o panel.o resourceManager.o \
 	screen.o sdl_ttf_multifont.o sdlutils.o text_edit.o utf8.o text_viewer.o image_viewer.o window.o \
 	umrk_input.o \
 	sdl_gfx/SDL2_rotozoom.o
 
 DEPFILES := $(patsubst %.o,$(OUTDIR)/%.d,$(OBJS))
 
-.PHONY: all native run-native package package-native package-build package-platform package-mlp1 mlp1 install-jawaka-app adb-stage-pak-mlp1 clean check-sdl
+.PHONY: all native run-native i18n-pot i18n-check i18n-parser-test i18n-runtime-test i18n-build i18n-review package package-native package-build package-platform package-mlp1 mlp1 install-jawaka-app adb-stage-pak-mlp1 clean check-sdl
 
 all: native
 
@@ -122,11 +136,54 @@ $(OUTDIR)/%.o: src/%.c | check-sdl
 	$(CXX) $(CXXFLAGS_COMMON) -MP -MMD -MF "$(@:%.o=%.d)" -c "$<" -o "$@"
 
 run-native: native
+	@mkdir -p "$(USERDATA_PATH)"
 	SDCARD_PATH="$(SDCARD_PATH)" \
 	UMRK_PLATFORM_PATH="$(UMRK_PLATFORM_PATH)" \
 	APPS_PATH="$(APPS_PATH)" \
 	JAWAKA_SDCARD_ROOT="$(JAWAKA_SDCARD_ROOT)" \
+	CAT_FONTS_DIR="$(CAT_FONTS_DIR)" \
+	USERDATA_PATH="$(USERDATA_PATH)" \
+	THING_FILE_I18N_DIR="$(I18N_TSV_DIR)" \
 	"$(EXECUTABLE)" --res-dir "$(CURDIR)/res"
+
+# Regenerate the canonical key list from direct literal T() calls in the
+# sources. Commit the result -- `make i18n-check` diffs it, so a UI-string
+# change without a regenerated .pot fails there.
+i18n-pot:
+	python3 tools/i18n-extract.py
+
+# What CI runs: the committed .pot must match the code, and any committed
+# translation must parse, carry no orphan or duplicate keys, keep its printf
+# conversions compatible with its keys, and reach the coverage gate.
+i18n-parser-test:
+	python3 tools/i18n-parser-test.py
+
+$(BUILD)/bin/i18n-runtime-test: tests/i18n-runtime-test.cpp src/i18n.cpp src/i18n.h | $(BUILD)/bin
+	$(CXX) $(CXXSTD) $(CWARN) -Isrc tests/i18n-runtime-test.cpp src/i18n.cpp -o "$@"
+
+i18n-runtime-test: $(BUILD)/bin/i18n-runtime-test
+	"$<"
+
+i18n-check: i18n-parser-test i18n-runtime-test
+	python3 tools/i18n-extract.py --check --gate $(I18N_COVERAGE_GATE) --po $(I18N_POS)
+
+# Release tables: fuzzy entries never ship.
+$(I18N_TSV_DIR):
+	@mkdir -p "$@"
+
+$(I18N_TSV_DIR)/%.tsv: i18n/%.po tools/i18n-po2tsv.py | $(I18N_TSV_DIR)
+	python3 tools/i18n-po2tsv.py $< -o $@
+
+i18n-build: $(I18N_TSV)
+
+# Live-review tables (fuzzy entries included on purpose), named so they can be
+# dropped into $USERDATA_PATH/Thing-File/i18n/ for the on-device wording pass.
+i18n-review:
+	@mkdir -p "$(I18N_REVIEW_DIR)"
+	@for po in $(I18N_POS); do \
+		lang=$${po##*/}; lang=$${lang%.po}; \
+		python3 tools/i18n-po2tsv.py --fuzzy "$$po" -o "$(I18N_REVIEW_DIR)/$$lang.tsv" || exit 1; \
+	done
 
 package package-native: native
 	$(MAKE) BUILD="$(BUILD)" PLATFORM="$(PLATFORM)" package-build
@@ -139,11 +196,12 @@ package-platform:
 		*) echo "unsupported Thing-File package platform: $(PLATFORM)" >&2; exit 1 ;; \
 	esac
 
-package-build:
+package-build: i18n-check i18n-build
 	@rm -rf "$(PACKAGE_ROOT)"
-	@mkdir -p "$(PACKAGE_DIR)/bin" "$(PACKAGE_DIR)/res"
+	@mkdir -p "$(PACKAGE_DIR)/bin" "$(PACKAGE_DIR)/res" "$(PACKAGE_DIR)/res/i18n"
 	@cp -f "$(EXECUTABLE)" "$(PACKAGE_DIR)/bin/$(APP_BIN_NAME)"
 	@cp -Rf res/. "$(PACKAGE_DIR)/res/"
+	@if [ -n "$(I18N_POS)" ]; then cp -f $(I18N_TSV) "$(PACKAGE_DIR)/res/i18n/"; fi
 	@if [ -f "$(CATASTROPHE_DIR)/res/font.ttf" ]; then cp -f "$(CATASTROPHE_DIR)/res/font.ttf" "$(PACKAGE_DIR)/res/font.ttf"; fi
 	@cp -f "pak/launch.sh" "$(PACKAGE_DIR)/launch.sh"
 	@printf '{ "name": "File Explorer", "icon": "res/icon.png", "platform": "$(PLATFORM_ID)", "pak_version": "0.1.0", "min_jawaka_version": "0.0.1" }\n' > "$(PACKAGE_DIR)/pak.json"
