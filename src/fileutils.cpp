@@ -258,7 +258,7 @@ void ActionToDir(const std::vector<std::string> &inputs,
     for (const std::string &input : inputs)
     {
         action_desc = i18n::fmt(action_fmt, File_utils::getFileName(input).c_str());
-        const bool is_last = (i == input.size() - 1);
+        const bool is_last = (i == inputs.size() - 1);
         progress_fn(action_desc, i++, inputs.size());
         JoinPath(dest_dir, File_utils::getFileName(input), dest_filename);
         if (confirm_overwrite && File_utils::fileExists(dest_filename))
