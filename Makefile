@@ -211,7 +211,7 @@ package-build: i18n-check i18n-build
 		printf '  "platform": "$(PLATFORM_ID)",\n'; \
 		printf '  "pak_version": "0.1.0",\n'; \
 		printf '  "min_jawaka_version": "0.0.1",\n'; \
-		printf '  "author": "LoveRetro & Utility Muffin Research Kitchen",\n'; \
+		printf '  "author": "LoveRetro & UMRK",\n'; \
 		printf '  "description": "Two-pane commander-style file manager, with browsing, text editing, image viewing, copy, move, rename, delete, symlinks, directory creation, and disk usage inspection."\n'; \
 		printf '}\n'; \
 	} > "$(PACKAGE_DIR)/pak.json"
