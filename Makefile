@@ -204,7 +204,17 @@ package-build: i18n-check i18n-build
 	@if [ -n "$(I18N_POS)" ]; then cp -f $(I18N_TSV) "$(PACKAGE_DIR)/res/i18n/"; fi
 	@if [ -f "$(CATASTROPHE_DIR)/res/font.ttf" ]; then cp -f "$(CATASTROPHE_DIR)/res/font.ttf" "$(PACKAGE_DIR)/res/font.ttf"; fi
 	@cp -f "pak/launch.sh" "$(PACKAGE_DIR)/launch.sh"
-	@printf '{ "name": "File Explorer", "icon": "res/icon.png", "platform": "$(PLATFORM_ID)", "pak_version": "0.1.0", "min_jawaka_version": "0.0.1" }\n' > "$(PACKAGE_DIR)/pak.json"
+	@{ \
+		printf '{\n'; \
+		printf '  "name": "File Explorer",\n'; \
+		printf '  "icon": "res/icon.png",\n'; \
+		printf '  "platform": "$(PLATFORM_ID)",\n'; \
+		printf '  "pak_version": "0.1.0",\n'; \
+		printf '  "min_jawaka_version": "0.0.1",\n'; \
+		printf '  "author": "LoveRetro & UMRK",\n'; \
+		printf '  "description": "Two-pane commander-style file manager, with browsing, text editing, image viewing, copy, move, rename, delete, symlinks, directory creation, and disk usage inspection."\n'; \
+		printf '}\n'; \
+	} > "$(PACKAGE_DIR)/pak.json"
 	@if [ "$(PLATFORM_ID)" = "mlp1" ]; then \
 		{ \
 			printf '{\n'; \
