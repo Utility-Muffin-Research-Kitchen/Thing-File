@@ -212,10 +212,16 @@ void CKeyboard::init()
     footer_.reset(
         SDL_utils::createImage(screen.actual_w, FOOTER_H * screen.ppu_y,
             SDL_MapRGB(surfaces_[0]->format, COLOR_TITLE_BG)));
-    SDL_utils::applyText(screen.w / 2, 1, footer_.get(), m_fonts,
-        T("A-Input B-Cancel START-OK L/R⇧ Y← X␣"), Globals::g_colorTextTitle,
-//        T("A-Input B-Cancel START-OK L/R↑ Y← X␣"), Globals::g_colorTextTitle,
-        { COLOR_TITLE_BG }, SDL_utils::T_TEXT_ALIGN_CENTER);
+    // Name the buttons the constructor actually bound: B is key_parent and Y
+    // is key_system, and which of the two cancels depends on the build. A
+    // fixed string went stale when the tg5040 port dropped
+    // OSK_KEY_SYSTEM_IS_BACKSPACE and B became backspace.
+    const char *hint = config().osk_key_system_is_backspace
+        ? T("A-Input B-Cancel START-OK L/R⇧ Y← X␣")
+        : T("A-Input Y-Cancel START-OK L/R⇧ B← X␣");
+    SDL_utils::applyText(screen.w / 2, 1, footer_.get(), m_fonts, hint,
+        Globals::g_colorTextTitle, { COLOR_TITLE_BG },
+        SDL_utils::T_TEXT_ALIGN_CENTER);
 }
 
 void CKeyboard::renderButton(
