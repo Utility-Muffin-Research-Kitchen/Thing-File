@@ -20,6 +20,10 @@ msgstr ""
 msgid "A-Input B-Cancel START-OK L/R⇧ Y← X␣"
 msgstr ""
 
+#: src/keyboard.cpp
+msgid "A-Input Y-Cancel START-OK L/R⇧ B← X␣"
+msgstr ""
+
 #: src/error_dialog.h
 msgid "Abort"
 msgstr ""

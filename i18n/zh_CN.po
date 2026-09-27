@@ -16,6 +16,9 @@ msgstr "已选中 %zu 项："
 msgid "A-Input B-Cancel START-OK L/R⇧ Y← X␣"
 msgstr "A-输入 B-取消 START-确定 L/R⇧ Y← X␣"
 
+msgid "A-Input Y-Cancel START-OK L/R⇧ B← X␣"
+msgstr "A-输入 Y-取消 START-确定 L/R⇧ B← X␣"
+
 msgid "Abort"
 msgstr "中止"
 
