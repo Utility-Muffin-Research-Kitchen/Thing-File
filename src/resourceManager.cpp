@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 
 #include <SDL_image.h>
@@ -51,42 +52,61 @@ std::string ResDir = RES_DIR "";
 std::string ResPath(const char *path) { return ResDir + path; }
 std::string ResPath(const std::string &path) { return ResDir + path; }
 
-/* The shared CJK face the Leaf platform stages under CAT_FONTS_DIR. Resolved
-   at runtime rather than copied into the package: bundling the ~8 MB face
-   would grow this pak tenfold and leave a second copy of the same asset on the
-   same card. Empty when CAT_FONTS_DIR is unset (direct/manual launches). */
-std::string SharedCjkFontPath() {
+/* A face the Leaf platform stages under CAT_FONTS_DIR. Resolved at runtime
+   rather than copied into the package: bundling the ~8 MB Han face would grow
+   this pak tenfold and leave a second copy of the same asset on the same card.
+   Empty when CAT_FONTS_DIR is unset (direct/manual launches). */
+std::string SharedFontPath(const char *rel) {
     const char *dir = std::getenv("CAT_FONTS_DIR");
     if (dir == nullptr || dir[0] == '\0') return std::string();
-    return std::string(dir) +
-        "/fonts/SourceHanSansCN/SourceHanSansCN-Regular.otf";
+    return std::string(dir) + "/fonts/" + rel;
 }
+
+/* Source Han Sans CN carries Han and kana but no Hangul, so Korean file names
+   need Leaf's Hangul face too. Leaf ships it from v0.14.0-beta.2; an older
+   card simply lacks the file. */
+constexpr const char *kSharedCjkFont = "SourceHanSansCN/SourceHanSansCN-Regular.otf";
+constexpr const char *kSharedHangulFont = "LeafHanSansKR/LeafHanSansKR-Regular.otf";
 
 std::vector<TTF_Font *> LoadFonts(bool low_dpi) {
     const FontSpec *specs = low_dpi ? kLowDpiFonts : kFonts;
     const std::size_t len = low_dpi ? kLowDpiFontsLen : kFontsLen;
 
     std::vector<TTF_Font *> fonts;
-    fonts.reserve(len + 1);
+    fonts.reserve(len + 2);
     for (std::size_t i = 0; i < len; ++i) {
         const std::string &path = specs[i].path;
         auto *font = SDL_utils::loadFont(path.front() == '/' ? path : ResPath(path), specs[i].size * config().disp_ppu_y);
         if (font != nullptr) fonts.push_back(font);
     }
 
-    /* Source Han is the last fallback face in every language, so CJK file
-       names render regardless of the UI language. While a CJK language is
+    /* Source Han is a fallback face in every language, so CJK file names
+       render regardless of the UI language. While a CJK language is
        active it becomes the first face instead, so Chinese UI strings and the
        untranslated English around them use one coherent family. Logical size
        9 follows the upstream fallback-font precedent. A missing or broken
        shared face is logged by loadFont and simply omitted -- it must never
        keep the file manager from starting. */
-    const std::string han_path = SharedCjkFontPath();
+    const std::string han_path = SharedFontPath(kSharedCjkFont);
     if (!han_path.empty()) {
         auto *han = SDL_utils::loadFont(han_path, 9 * config().disp_ppu_y);
         if (han != nullptr) {
             if (i18n::is_cjk()) fonts.insert(fonts.begin(), han);
             else fonts.push_back(han);
+        }
+    }
+
+    /* The Hangul face follows the same rule, with Korean as its language: it
+       leads a Korean UI, ahead of the Han face, and is otherwise the last
+       fallback. Each glyph comes from the first face that has it, and only
+       this one has Hangul, so Korean text renders in every language. */
+    const std::string hangul_path = SharedFontPath(kSharedHangulFont);
+    if (!hangul_path.empty()) {
+        auto *hangul = SDL_utils::loadFont(hangul_path, 9 * config().disp_ppu_y);
+        if (hangul != nullptr) {
+            if (std::strncmp(i18n::language(), "ko", 2) == 0)
+                fonts.insert(fonts.begin(), hangul);
+            else fonts.push_back(hangul);
         }
     }
 
